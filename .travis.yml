@@ -1,0 +1,14 @@
+sudo: false
+language: c
+compiler:
+  - gcc
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - libssl-dev
+    - valgrind
+script:
+   - make test
+   - make test CC=clang
