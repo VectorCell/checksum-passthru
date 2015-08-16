@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export PATH=.:$PATH
-
+VALGRIND="valgrind"
 HASHES="md5 sha1 sha224 sha256 sha384 sha512"
 
 accuracytest0 () {
@@ -17,7 +17,7 @@ accuracytest2 () {
 }
 
 memorytest0 () {
-	$(which valgrind) ${1}pass < ${1}pass.c > /dev/null
+	$VALGRIND ${1}pass < ${1}pass.c > /dev/null
 }
 
 speedtest0 () {

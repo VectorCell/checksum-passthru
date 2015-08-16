@@ -10,6 +10,10 @@ For example, you could use it to verify a file as it's being downloaded:
 curl http://url/image.iso | md5pass > image.iso 2> image.iso.md5
 ```
 
+As a side note, performance seems to be superior to corresponding md5sum-type programs.
+
+
+
 Travis CI builds:
 
 |Branch      |Status   |
