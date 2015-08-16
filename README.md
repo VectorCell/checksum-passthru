@@ -15,7 +15,7 @@ As a side note, performance seems to be superior to corresponding md5sum-type pr
 x64 benchmarked with `benchmark.sh` using 1 GB of test data on an Intel Xeon E3-1271 @ 3.6 GHz in Ubuntu 14.04.3 LTS, built with GCC 4.8.
 ARMv6 benchmarked with `benchmark.sh` using 32 MB of test data on a Raspberry Pi B+ in Raspbian, built with GCC 4.6.
 
-| Hash   | *sum (x86) | *pass (x64) | *sum (ARMv6) | *pass (ARM v6) |
+| Hash   | *sum (x64) | *pass (x64) | *sum (ARMv6) | *pass (ARM v6) |
 |--------|------------|-------------|--------------|----------------|
 | MD5    |   671 MB/s |    709 MB/s |      20 MB/s |        20 MB/s |
 | SHA1   |   426 MB/s |    826 MB/s |    13.3 MB/s |      14.6 MB/s |
