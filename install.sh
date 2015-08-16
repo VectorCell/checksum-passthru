@@ -17,8 +17,10 @@ for file in $(ls $dir | grep pass | grep -v -E "\.c|\.sh"); do
 		echo cp $src $dest
 		cp $src $dest
 	else
-		echo ln -s $src $dest
-		ln -s $src $dest
+		#echo ln -s $src $dest
+		#ln -s $src $dest
+		echo cp $src $dest
+		cp $src $dest
 	fi
 done
 
