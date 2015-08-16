@@ -2,15 +2,8 @@
 * md5-pass.c
 */
 
-#include <stdio.h> // printf
-
-#if defined(__APPLE__)
-#	define COMMON_DIGEST_FOR_OPENSSL
-#	include <CommonCrypto/CommonDigest.h>
-#	define SHA1 CC_SHA1
-#else
-#	include <openssl/md5.h>
-#endif
+#include <stdio.h>
+#include <openssl/md5.h>
 
 #define BUFFER_SIZE (1024U * 32U)
 
@@ -19,7 +12,7 @@ int main (int argc, char *argv[]) {
 	FILE * infile = stdin;
 
 	MD5_CTX c;
-	unsigned char digest[16];
+	unsigned char digest[MD5_DIGEST_LENGTH];
 	char out[33];
 	MD5_Init(&c);
 
@@ -31,8 +24,8 @@ int main (int argc, char *argv[]) {
 	}
 
 	MD5_Final(digest, &c);
-	for (int n = 0; n < 16; ++n) {
-		snprintf(&(out[n*2]), 16*2, "%02x", (unsigned int)digest[n]);
+	for (int n = 0; n < MD5_DIGEST_LENGTH; ++n) {
+		snprintf(&(out[n*2]), MD5_DIGEST_LENGTH*2, "%02x", (unsigned int)digest[n]);
 	}
 	fprintf(stderr, "%s  %s\n", out, "-");
 
