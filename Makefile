@@ -3,7 +3,7 @@ LIBFLAGS := -lcrypto -lssl
 
 all : md5pass sha1pass sha224pass sha256pass sha384pass sha512pass
 
-md5pass : md5pass.o
+md5pass : md5pass.c
 	$(CC) $(CFLAGS) -o md5pass md5pass.c $(LIBFLAGS)
 
 sha1pass : sha1pass.c
@@ -24,6 +24,12 @@ sha512pass : sha512pass.c
 test : clean all
 	./test.sh
 	./benchmark.sh
+
+install : all
+	./install.sh
+
+uninstall :
+	./uninstall.sh
 
 clean :
 	rm -f *.d
