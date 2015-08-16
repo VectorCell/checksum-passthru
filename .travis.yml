@@ -9,6 +9,7 @@ addons:
     packages:
     - libssl-dev
     - wamerican
+    - pv
     - valgrind
 script:
    - make test
