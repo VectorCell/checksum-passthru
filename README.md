@@ -23,6 +23,10 @@ Benchmarked with `benchmark.sh` using an 1 GB of test data on an Intel Xeon E3-1
 | SHA384 | 365 MB/s | 447 MB/s |
 | SHA512 | 363 MB/s | 445 MB/s |
 
+xxhpass is included as a shell script for convenience, but it just piggy-backs on [xxhsum](https://github.com/Cyan4973/xxHash),
+so it suffers a bit of a performance penalty (less pronounced for large data sets).
+It's still way faster than any of the other hashing programs, though.
+
 Travis CI builds:
 
 |Branch      |Status   |
