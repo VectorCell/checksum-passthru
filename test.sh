@@ -17,7 +17,7 @@ accuracytest2 () {
 }
 
 memorytest0 () {
-	$(which valgrind) ${1}pass < ${1}pass.c &> /dev/null
+	$(which valgrind) ${1}pass < ${1}pass.c > /dev/null
 }
 
 speedtest0 () {
