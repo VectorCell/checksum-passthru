@@ -10,7 +10,7 @@ else
 fi
 cd $bindir
 
-for file in $(ls $dir | grep pass | grep -v ".c"); do
+for file in $(ls $dir | grep pass | grep -v -E "\.c|\.sh"); do
 	installed="$bindir/$file"
 	if [ -e $installed ]; then
 		echo rm $installed

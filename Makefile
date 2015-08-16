@@ -1,7 +1,7 @@
 CPPFLAGS := -pedantic -std=c++0x -Wall -O3
 LIBFLAGS := -lcrypto -lssl
 
-all : sumpass md5pass sha1pass sha224pass sha256pass sha384pass sha512pass xxhsum
+all : sumpass md5pass sha1pass sha224pass sha256pass sha384pass sha512pass xxhpass
 
 sumpass : sumpass.cc
 	$(CXX) $(CPPFLAGS) -o sumpass sumpass.cc $(LIBFLAGS)

@@ -1,8 +1,10 @@
+sumpass
 md5pass
 sha1pass
 sha224pass
 sha256pass
 sha384pass
 sha512pass
+xxhpass
 *.d
 *.o
