@@ -28,7 +28,7 @@ test : clean all
 install : all
 	./install.sh
 
-uninstall :
+uninstall : all
 	./uninstall.sh
 
 clean :
