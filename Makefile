@@ -29,7 +29,6 @@ xxhpass : xxhpass.sh
 
 test : clean all
 	./test.sh
-	./benchmark.sh
 
 install : all
 	./install.sh

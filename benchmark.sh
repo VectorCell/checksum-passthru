@@ -2,7 +2,7 @@
 
 TESTSIZE="$1"
 if [ -z "$TESTSIZE" ]; then
-	TESTSIZE="1M"
+	TESTSIZE="128M"
 fi
 
 if [ -n "$(which pv)" ]; then
@@ -16,19 +16,19 @@ if [ -n "$(which pv)" ]; then
 	for HASH in $(echo $HASHES | tr ' ' '\n'); do
 		printf "\n$HASH\n"
 		echo "${HASH}sum"
-		for i in {0..1}; do
+		for i in {0..0}; do
 			pv -cN "	" < $TEMPFILE | ${HASH}sum &> /dev/null
 		done
 		echo "${HASH}pass"
-		for i in {0..1}; do
+		for i in {0..0}; do
 			pv -cN "	" < $TEMPFILE | ${HASH}pass &> /dev/null
 		done
 		echo "openssl $HASH"
-		for i in {0..1}; do
+		for i in {0..0}; do
 			pv -cN "	" < $TEMPFILE | openssl $HASH &> /dev/null
 		done
 		echo "sumpass $HASH"
-		for i in {0..1}; do
+		for i in {0..0}; do
 			pv -cN "	" < $TEMPFILE | sumpass $HASH &> /dev/null
 		done
 	done
