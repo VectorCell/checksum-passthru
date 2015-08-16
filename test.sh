@@ -29,7 +29,7 @@ accuracytest2 () {
 }
 
 memorytest0 () {
-	$VALGRIND ${1}pass < ${1}pass.cc > /dev/null
+	$VALGRIND ${1}pass < /usr/share/dict/words > /dev/null
 }
 
 speedtest0 () {
