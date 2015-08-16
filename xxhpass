@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [ -n "$(which xxhsum)" ]; then
+	tee >(xxhsum 1>&2)
+else
+	echo "xxhsum not found"
+fi
