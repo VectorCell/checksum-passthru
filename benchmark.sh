@@ -8,7 +8,7 @@ fi
 if [ -n "$(which pv)" ]; then
 	export PATH=.:$PATH
 
-	HASHES="md5 sha1 sha224 sha256 sha384 sha512 xxh"
+	HASHES="md5 sha1 sha224 sha256 sha384 sha512"
 
 	TEMPFILE="sparse-$RANDOM.file"
 	dd if=/dev/zero of=$TEMPFILE bs=1 count=0 seek=$TESTSIZE 2> /dev/null
