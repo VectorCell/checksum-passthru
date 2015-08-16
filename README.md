@@ -10,9 +10,9 @@ For example, you could use it to verify a file as it's being downloaded:
 curl http://url/image.iso | md5pass > image.iso 2> image.iso.md5
 ```
 
-As a side note, performance seems to be superior to corresponding md5sum-type programs.
+As a side note, performance seems to be superior to corresponding md5sum-type programs for large data streams.
 
-Benchmarked with `benchmark.sh` using an Intel Xeon E3-1271 @ 3.6 GHz in Ubuntu 14.04.3 LTS, built with GCC 4.8.
+Benchmarked with `benchmark.sh` using an 1 GB of test data on an Intel Xeon E3-1271 @ 3.6 GHz in Ubuntu 14.04.3 LTS, built with GCC 4.8.
 
 | Hash   | *sum     | *pass    |
 |--------|----------|----------|
