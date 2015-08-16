@@ -34,6 +34,7 @@ It's still way faster than any of the other hashing programs, though.
 
 Travis CI builds:
 
-|Branch      |Status   |
-|------------|---------|
-|master      | [![Build Status](https://travis-ci.org/VectorCell/checksum-passthru.svg?branch=master)](https://travis-ci.org/VectorCell/checksum-passthru?branch=master) |
+|Branch | Status |
+|-------|--------|
+|master | [![Build Status](https://travis-ci.org/VectorCell/checksum-passthru.svg?branch=master)](https://travis-ci.org/VectorCell/checksum-passthru?branch=master) |
+|dev    | [![Build Status](https://travis-ci.org/VectorCell/checksum-passthru.svg?branch=dev)](https://travis-ci.org/VectorCell/checksum-passthru?branch=dev) |
