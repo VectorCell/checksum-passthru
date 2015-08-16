@@ -1,4 +1,5 @@
-CPPFLAGS := -pedantic -std=c++0x -Wall -O3
+CFLAGS   := -pedantic -std=c99 -Wall -Werror -O3
+CPPFLAGS := -pedantic -std=c++0x -Wall -Werror -O3
 LIBFLAGS := -lcrypto -lssl
 
 all : sumpass md5pass sha1pass sha224pass sha256pass sha384pass sha512pass xxhpass
@@ -6,23 +7,23 @@ all : sumpass md5pass sha1pass sha224pass sha256pass sha384pass sha512pass xxhpa
 sumpass : sumpass.cc
 	$(CXX) $(CPPFLAGS) -o sumpass sumpass.cc $(LIBFLAGS)
 
-md5pass : md5pass.cc
-	$(CXX) $(CPPFLAGS) -o md5pass md5pass.cc $(LIBFLAGS)
+md5pass : md5pass.c
+	$(CC) $(CFLAGS) -o md5pass md5pass.c $(LIBFLAGS)
 
-sha1pass : sha1pass.cc
-	$(CXX) $(CPPFLAGS) -o sha1pass sha1pass.cc $(LIBFLAGS)
+sha1pass : sha1pass.c
+	$(CC) $(CFLAGS) -o sha1pass sha1pass.c $(LIBFLAGS)
 
-sha224pass : sha224pass.cc
-	$(CXX) $(CPPFLAGS) -o sha224pass sha224pass.cc $(LIBFLAGS)
+sha224pass : sha224pass.c
+	$(CC) $(CFLAGS) -o sha224pass sha224pass.c $(LIBFLAGS)
 
-sha256pass : sha256pass.cc
-	$(CXX) $(CPPFLAGS) -o sha256pass sha256pass.cc $(LIBFLAGS)
+sha256pass : sha256pass.c
+	$(CC) $(CFLAGS) -o sha256pass sha256pass.c $(LIBFLAGS)
 
-sha384pass : sha384pass.cc
-	$(CXX) $(CPPFLAGS) -o sha384pass sha384pass.cc $(LIBFLAGS)
+sha384pass : sha384pass.c
+	$(CC) $(CFLAGS) -o sha384pass sha384pass.c $(LIBFLAGS)
 
-sha512pass : sha512pass.cc
-	$(CXX) $(CPPFLAGS) -o sha512pass sha512pass.cc $(LIBFLAGS)
+sha512pass : sha512pass.c
+	$(CC) $(CFLAGS) -o sha512pass sha512pass.c $(LIBFLAGS)
 
 xxhpass : xxhpass.sh
 	cp xxhpass.sh xxhpass
