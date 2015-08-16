@@ -23,7 +23,6 @@ ARMv6 benchmarked with `benchmark.sh` using 32 MB of test data on a Raspberry Pi
 | SHA256 |   243 MB/s |    292 MB/s |    8.71 MB/s |      11.2 MB/s |
 | SHA384 |   365 MB/s |    447 MB/s |     471 kB/s |      6.52 MB/s |
 | SHA512 |   363 MB/s |    445 MB/s |     477 kB/s |      6.56 MB/s |
-| xxHash |  3.03 GB/s |   2.54 GB/s |    22.1 MB/s |      17.2 MB/s |
 
 There seems to be serious problems with the included sha384sum and sha512sum programs
 in Rasbpian.
