@@ -15,11 +15,21 @@ if [ -n "$(which pv)" ]; then
 
 	for HASH in $(echo $HASHES | tr ' ' '\n'); do
 		printf "\n$HASH\n"
-		for POSTFIX in $(echo "sum pass" | tr ' ' '\n'); do
-			pv -cN "$HASH$POSTFIX" < $TEMPFILE | $HASH$POSTFIX &> /dev/null
+		echo "${HASH}sum"
+		for i in {0..1}; do
+			pv -cN "	" < $TEMPFILE | ${HASH}sum &> /dev/null
 		done
-		for POSTFIX in $(echo "pass sum" | tr ' ' '\n'); do
-			pv -cN "$HASH$POSTFIX" < $TEMPFILE | $HASH$POSTFIX &> /dev/null
+		echo "${HASH}pass"
+		for i in {0..1}; do
+			pv -cN "	" < $TEMPFILE | ${HASH}pass &> /dev/null
+		done
+		echo "openssl $HASH"
+		for i in {0..1}; do
+			pv -cN "	" < $TEMPFILE | openssl $HASH &> /dev/null
+		done
+		echo "sumpass $HASH"
+		for i in {0..1}; do
+			pv -cN "	" < $TEMPFILE | sumpass $HASH &> /dev/null
 		done
 	done
 
