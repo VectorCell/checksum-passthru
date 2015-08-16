@@ -10,17 +10,9 @@ else
 fi
 cd $bindir
 
-for file in $(ls $dir | grep pass | grep -v -E "\.c|\.sh"); do
+for file in $(ls $dir | grep pass | grep -v -E "\.|Makefile"); do
 	src="$dir/$file"
 	dest="$bindir/$file"
-	if [ "$(whoami)" == root ]; then
-		echo cp $src $dest
-		cp $src $dest
-	else
-		#echo ln -s $src $dest
-		#ln -s $src $dest
-		echo cp $src $dest
-		cp $src $dest
-	fi
+	echo cp $src $dest
+	cp $src $dest
 done
-
