@@ -1,8 +1,8 @@
 /*
-* sha384pass.c
+* sha384pass.cc
 */
 
-#include <stdio.h>
+#include <cstdio>
 #include <openssl/sha.h>
 
 #define BUFFER_SIZE (1024U * 32U)

@@ -1,8 +1,8 @@
 /*
-* md5-pass.c
+* md5pass.cc
 */
 
-#include <stdio.h>
+#include <cstdio>
 #include <openssl/md5.h>
 
 #define BUFFER_SIZE (1024U * 32U)
