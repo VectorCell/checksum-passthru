@@ -1,5 +1,5 @@
 /*
-* sumpass.c
+* sumpass.cc
 */
 
 #include <iostream>
@@ -7,7 +7,6 @@
 
 #include <cstdio>
 #include <cstring>
-#include <openssl/md5.h>
 
 #include "sumpass.h"
 

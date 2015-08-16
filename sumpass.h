@@ -1,8 +1,13 @@
+/*
+* sumpass.h
+*/
+
 #ifndef SUMPASS_H
 #define SUMPASS_H
 
 #include <cstdio>
 #include <string>
+#include <openssl/md5.h>
 #include <openssl/sha.h>
 
 #ifndef BUFFER_SIZE
