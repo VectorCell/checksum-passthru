@@ -3,5 +3,6 @@
 if [ -n "$(which xxhsum)" ]; then
 	tee >(xxhsum 1>&2)
 else
-	echo "xxhsum not found"
+	1>&2 echo "xxhsum not found"
+	cat
 fi
