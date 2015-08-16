@@ -5,19 +5,31 @@ VALGRIND="valgrind"
 HASHES="md5 sha1 sha224 sha256 sha384 sha512"
 
 accuracytest0 () {
-	echo "hello world" | ${1}pass | tee >(${1}sum) >(openssl $1 | awk '{print $2}') > /dev/null
+	echo "hello world" | ${1}sum | awk '{print $1}'
+	echo "hello world" | ${1}pass > /dev/null
+	echo "hello world" | openssl ${1} | awk '{print $2}'
+	echo "hello world" | sumpass ${1} > /dev/null
 }
 
 accuracytest1 () {
-	dd if=/dev/urandom bs=1k count=1k 2> /dev/null | ${1}pass | tee >(${1}sum) >(openssl $1 | awk '{print $2}') > /dev/null
+	TEMPFILE=/tmp/tempfile-$RANDOM.file
+	dd if=/dev/urandom of=$TEMPFILE bs=1k count=1k 2> /dev/null
+	${1}sum < $TEMPFILE | awk '{print $1}'
+	${1}pass < $TEMPFILE > /dev/null
+	openssl ${1} < $TEMPFILE | awk '{print $2}'
+	sumpass ${1} < $TEMPFILE > /dev/null
+	rm -f $TEMPFILE
 }
 
 accuracytest2 () {
-	${1}pass < /usr/share/dict/words | tee >(${1}sum) >(openssl $1 | awk '{print $2}') > /dev/null
+	${1}sum < /usr/share/dict/words | awk '{print $1}'
+	${1}pass < /usr/share/dict/words > /dev/null
+	openssl ${1} < /usr/share/dict/words | awk '{print $2}'
+	sumpass ${1} < /usr/share/dict/words > /dev/null
 }
 
 memorytest0 () {
-	$VALGRIND ${1}pass < ${1}pass.c > /dev/null
+	$VALGRIND ${1}pass < ${1}pass.cc > /dev/null
 }
 
 speedtest0 () {
