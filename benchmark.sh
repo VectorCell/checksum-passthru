@@ -12,6 +12,9 @@ for HASH in $(echo $HASHES | tr ' ' '\n'); do
 	for POSTFIX in $(echo "sum pass" | tr ' ' '\n'); do
 		pv -cN "$HASH$POSTFIX" < $TEMPFILE | $HASH$POSTFIX &> /dev/null
 	done
+	for POSTFIX in $(echo "pass sum" | tr ' ' '\n'); do
+		pv -cN "$HASH$POSTFIX" < $TEMPFILE | $HASH$POSTFIX &> /dev/null
+	done
 done
 
 rm -f $TEMPFILE

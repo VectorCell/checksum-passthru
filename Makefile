@@ -1,4 +1,4 @@
-CXXFLAGS := -pedantic -std=c99 -Wall
+CXXFLAGS := -pedantic -std=c99 -Wall -O3
 LIBFLAGS := -lcrypto -lssl
 
 all : md5pass sha1pass sha224pass sha256pass sha384pass sha512pass
