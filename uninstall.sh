@@ -7,6 +7,7 @@ if [ "$(whoami)" == root ]; then
 	bindir="/usr/local/bin"
 else
 	bindir="$HOME/bin"
+fi
 cd $bindir
 
 for file in $(ls $dir | grep pass | grep -v ".c"); do
