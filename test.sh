@@ -21,7 +21,8 @@ speedtest0 () {
 	SPARSEFILE="sparse-$RANDOM.file"
 	dd if=/dev/zero of=$SPARSEFILE bs=1k count=0 seek=16k 2> /dev/null
 	for POSTFIX in $(echo "sum pass" | tr ' ' '\n'); do
-		time pv -cN "$1$POSTFIX" < $SPARSEFILE | $1$POSTFIX &> /dev/null
+		echo "$1POSTFIX"
+		time $1$POSTFIX < $SPARSEFILE &> /dev/null
 	done
 	rm $SPARSEFILE
 }
