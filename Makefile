@@ -23,6 +23,7 @@ sha512pass : sha512pass.c
 
 test : clean all
 	./test.sh
+	./benchmark.sh
 
 clean :
 	rm -f *.d

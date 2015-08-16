@@ -24,4 +24,6 @@ if [ -n "$(which pv)" ]; then
 	done
 
 	rm -f $TEMPFILE
+else
+	echo "pv not found, not benchmarking"
 fi
