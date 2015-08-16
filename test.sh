@@ -2,7 +2,7 @@
 
 export PATH=.:$PATH
 VALGRIND="valgrind"
-HASHES="md5 sha1 sha224 sha256 sha384 sha512"
+HASHES="md5 sha1 sha224 sha256 sha384 sha512 xxh"
 
 accuracytest0 () {
 	echo "hello world" | ${1}pass | tee >(${1}sum) >(openssl $1 | awk '{print $2}') > /dev/null
