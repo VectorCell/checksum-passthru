@@ -47,15 +47,12 @@ int main (int argc, char *argv[]) {
 	for (int k = 0; k < argc; ++k) {
 		if (is_infile) {
 			is_infile = false;
-			cout << "infile:  " << argv[k] << endl;
 			infile_name = argv[k];
 		} else if (is_outfile) {
 			is_outfile = false;
-			cout << "outfile: " << argv[k] << endl;
 			outfile_name = argv[k];
 		} else if (is_sumfile) {
 			is_sumfile = false;
-			cout << "sumfile: " << argv[k] << endl;
 			sumfile_name = argv[k];
 		} else {
 			if (!strcmp("-i", argv[k])) {
