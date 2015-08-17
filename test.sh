@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export PATH=.:$PATH
-VALGRIND="valgrind"
+#VALGRIND="valgrind"
 HASHES="md5 sha1 sha224 sha256 sha384 sha512"
 
 accuracytest0 () {
@@ -49,10 +49,12 @@ for HASH in $(echo $HASHES | tr ' ' '\n'); do
 		echo "accuracytest$i"
 		accuracytest$i $HASH 2>&1 | cat
 	done | awk '{print $1}'
-	for i in {0..0}; do
-		echo "memorytest$i"
-		memorytest$i $HASH
-	done | awk '{print $1}'
+	if [ -n "$VALGRIND" ]; then
+		for i in {0..0}; do
+			echo "memorytest$i"
+			memorytest$i $HASH
+		done | awk '{print $1}'
+	fi
 	for i in {0..0}; do
 		echo "speedtest$i"
 		speedtest$i $HASH
