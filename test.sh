@@ -35,10 +35,14 @@ memorytest0 () {
 
 speedtest0 () {
 	SPARSEFILE="sparse-$RANDOM.file"
-	dd if=/dev/zero of=$SPARSEFILE bs=1k count=0 seek=16k 2> /dev/null
+	dd if=/dev/zero of=$SPARSEFILE bs=1k count=0 seek=64k 2> /dev/null
 	for POSTFIX in $(echo "sum pass" | tr ' ' '\n'); do
 		echo "$1$POSTFIX"
 		time $1$POSTFIX < $SPARSEFILE &> /dev/null
+	done
+	for PROG in $(echo "openssl sumpass" | tr ' ' '\n'); do
+		echo "$PROG $1"
+		time $PROG $1 < $SPARSEFILE &> /dev/null
 	done
 	rm $SPARSEFILE
 }
