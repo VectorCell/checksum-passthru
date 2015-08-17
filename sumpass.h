@@ -17,6 +17,15 @@
 #	error "BUFFER_SIZE already defined"
 #endif
 
+const std::string no_digest (FILE* infile, FILE* outfile) {
+	unsigned char buffer[BUFFER_SIZE];
+	size_t count = 0;
+	while ((count = fread(buffer, 1, BUFFER_SIZE, infile)) > 0) {
+		fwrite(buffer, 1, count, outfile);
+	}
+	return "no algorithm applied";
+}
+
 template <typename DS>
 const std::string openssl_digest (FILE* infile, FILE* outfile, size_t digest_length, int(*init)(DS*), int(*update)(DS*, const void*, size_t), int(*final)(unsigned char*, DS*)) {
 	DS c;

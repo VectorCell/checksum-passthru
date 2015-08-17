@@ -1,5 +1,13 @@
-CFLAGS   := -pedantic -std=c99 -Wall -Werror -O3
-CPPFLAGS := -pedantic -std=c++0x -Wall -Werror -O3
+CSTD   := c99
+CPPSTD := c++11
+
+GCCVERSIONLT48 := $(shell expr `gcc -dumpversion` \< 4.8)
+ifeq "$(GCCVERSIONLT48)" "1"
+	CPPSTD := c++0x
+endif
+
+CFLAGS   := -pedantic -std=$(CSTD) -Wall -Werror -O3
+CPPFLAGS := -pedantic -std=$(CPPSTD) -Wall -Werror -O3
 LIBFLAGS := -lcrypto -lssl
 
 all : sumpass md5pass sha1pass sha224pass sha256pass sha384pass sha512pass xxhpass
