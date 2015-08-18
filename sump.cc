@@ -6,6 +6,7 @@
 #include <functional>
 
 #include <cstdio>
+#include <unistd.h>
 #include <cstring>
 
 #include "sump.h"
@@ -74,7 +75,11 @@ int main (int argc, char *argv[]) {
 	}
 
 	if (outfile_name == "-") {
-		outfile = stdout;
+		if (isatty(fileno(stdout))) {
+			outfile = NULL;
+		} else {
+			outfile = stdout;
+		}
 	} else {
 		outfile = fopen(outfile_name.c_str(), "w");
 	}

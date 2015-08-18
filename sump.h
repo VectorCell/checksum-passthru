@@ -17,17 +17,22 @@
 #	error "BUFFER_SIZE already defined"
 #endif
 
-std::string no_digest (FILE* infile, FILE* outfile) {
-	unsigned char buffer[BUFFER_SIZE];
-	size_t count = 0;
-	while ((count = fread(buffer, 1, BUFFER_SIZE, infile)) > 0) {
-		fwrite(buffer, 1, count, outfile);
-	}
-	return "no algorithm applied";
+int no_Init (size_t*) {
+	return 0;
+}
+int no_Update (size_t*, const void*, size_t) {
+	return 0;
+}
+int no_Final (unsigned char*, size_t*) {
+	return 0;
 }
 
-template <typename DS, size_t DIGEST_LENGTH>
-std::string openssl_digest (FILE* infile, FILE* outfile, int(*init)(DS*), int(*update)(DS*, const void*, size_t), int(*final)(unsigned char*, DS*)) {
+template <typename DS = size_t, size_t DIGEST_LENGTH = 1>
+std::string openssl_digest (FILE* infile, 
+	                        FILE* outfile, 
+	                        int(*init)(DS*) = no_Init, 
+	                        int(*update)(DS*, const void*, size_t) = no_Update, 
+	                        int(*final)(unsigned char*, DS*) = no_Final) {
 	DS c;
 	unsigned char digest[DIGEST_LENGTH];
 	char out[DIGEST_LENGTH * 2 + 1];
@@ -35,7 +40,8 @@ std::string openssl_digest (FILE* infile, FILE* outfile, int(*init)(DS*), int(*u
 	unsigned char buffer[BUFFER_SIZE];
 	size_t count = 0;
 	while ((count = fread(buffer, 1, BUFFER_SIZE, infile)) > 0) {
-		fwrite(buffer, 1, count, outfile);
+		if (outfile != NULL)
+			fwrite(buffer, 1, count, outfile);
 		update(&c, buffer, count);
 	}
 	final(digest, &c);
@@ -43,6 +49,10 @@ std::string openssl_digest (FILE* infile, FILE* outfile, int(*init)(DS*), int(*u
 		snprintf(&(out[n*2]), DIGEST_LENGTH*2, "%02x", (unsigned int)digest[n]);
 	}
 	return std::string(out);
+}
+
+std::string no_digest (FILE* infile, FILE* outfile) {
+	return openssl_digest(infile, outfile);
 }
 
 std::string md5_digest (FILE* infile, FILE* outfile) {
