@@ -37,5 +37,5 @@ Travis CI builds:
 
 |Branch | Status |
 |-------|--------|
-|master | [![Build Status](https://travis-ci.org/VectorCell/sump.svg?branch=master)](https://travis-ci.org/VectorCell/sump?branch=master) |
-|dev    | [![Build Status](https://travis-ci.org/VectorCell/sump.svg?branch=dev)](https://travis-ci.org/VectorCell/sump?branch=dev) |
+|master | [![Build Status](https://travis-ci.org/VectorCell/sumpass.svg?branch=master)](https://travis-ci.org/VectorCell/sumpass?branch=master) |
+|dev    | [![Build Status](https://travis-ci.org/VectorCell/sumpass.svg?branch=dev)](https://travis-ci.org/VectorCell/sumpass?branch=dev) |
