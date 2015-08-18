@@ -6,41 +6,42 @@ HASHES="md5 sha1 sha224 sha256 sha384 sha512"
 
 accuracytest0 () {
 	echo "hello world" | ${1}sum | awk '{print $1}'
-	echo "hello world" | ${1}pass > /dev/null
+	echo "hello world" | ${1}sump > /dev/null
 	echo "hello world" | openssl ${1} | awk '{print $2}'
-	echo "hello world" | sumpass ${1} > /dev/null
+	echo "hello world" | sump ${1} > /dev/null
 }
 
 accuracytest1 () {
 	TEMPFILE=/tmp/tempfile-$RANDOM.file
 	dd if=/dev/urandom of=$TEMPFILE bs=1k count=1k 2> /dev/null
 	${1}sum < $TEMPFILE | awk '{print $1}'
-	${1}pass < $TEMPFILE > /dev/null
+	${1}sump < $TEMPFILE > /dev/null
 	openssl ${1} < $TEMPFILE | awk '{print $2}'
-	sumpass ${1} < $TEMPFILE > /dev/null
+	sump ${1} < $TEMPFILE > /dev/null
 	rm -f $TEMPFILE
 }
 
 accuracytest2 () {
 	${1}sum < /usr/share/dict/words | awk '{print $1}'
-	${1}pass < /usr/share/dict/words > /dev/null
+	${1}sump < /usr/share/dict/words > /dev/null
 	openssl ${1} < /usr/share/dict/words | awk '{print $2}'
-	sumpass ${1} < /usr/share/dict/words > /dev/null
+	sump ${1} < /usr/share/dict/words > /dev/null
 }
 
 memorytest0 () {
-	$VALGRIND ${1}pass < /usr/share/dict/words > /dev/null
-	$VALGRIND sumpass $1 < /usr/share/dict/words > /dev/null
+	$VALGRIND ${1}sump < /usr/share/dict/words > /dev/null
+	$VALGRIND sump $1 < /usr/share/dict/words > /dev/null
 }
 
+# not meant for benchmarking, only for identifying serious speed problems
 speedtest0 () {
 	SPARSEFILE="sparse-$RANDOM.file"
-	dd if=/dev/zero of=$SPARSEFILE bs=1k count=0 seek=64k 2> /dev/null
-	for POSTFIX in $(echo "sum pass" | tr ' ' '\n'); do
+	dd if=/dev/zero of=$SPARSEFILE bs=1k count=0 seek=8k 2> /dev/null
+	for POSTFIX in $(echo "sum sump" | tr ' ' '\n'); do
 		echo "$1$POSTFIX"
 		time $1$POSTFIX < $SPARSEFILE &> /dev/null
 	done
-	for PROG in $(echo "openssl sumpass" | tr ' ' '\n'); do
+	for PROG in $(echo "openssl sump" | tr ' ' '\n'); do
 		echo "$PROG $1"
 		time $PROG $1 < $SPARSEFILE &> /dev/null
 	done

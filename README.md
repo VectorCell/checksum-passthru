@@ -1,9 +1,9 @@
-# sumpass
+# sump
 
 Tool for getting the checksum of piped input while it's in use.
 
 Use the same way you'd use md5sum-type programs without arguments (getting data from stdin), but
-unlike md5sum-type programs, sumpass outputs to stderr and passes input from stdin to stdout.
+unlike md5sum-type programs, sump outputs to stderr and passes input from stdin to stdout.
 
 For example, you could use it to verify a file as it's being downloaded:
 ```
@@ -35,5 +35,5 @@ Travis CI builds:
 
 |Branch | Status |
 |-------|--------|
-|master | [![Build Status](https://travis-ci.org/VectorCell/sumpass.svg?branch=master)](https://travis-ci.org/VectorCell/sumpass?branch=master) |
-|dev    | [![Build Status](https://travis-ci.org/VectorCell/sumpass.svg?branch=dev)](https://travis-ci.org/VectorCell/sumpass?branch=dev) |
+|master | [![Build Status](https://travis-ci.org/VectorCell/sump.svg?branch=master)](https://travis-ci.org/VectorCell/sump?branch=master) |
+|dev    | [![Build Status](https://travis-ci.org/VectorCell/sump.svg?branch=dev)](https://travis-ci.org/VectorCell/sump?branch=dev) |

@@ -10,8 +10,8 @@ else
 fi
 cd $bindir
 
-for file in $(ls $dir | grep pass | grep -v -E "\.|Makefile"); do
-	installed="$bindir/$file"
+find $dir -maxdepth 1 -perm -111 -type f | grep -v "\.sh$" | while read file; do
+	installed="$bindir/$(basename $file)"
 	if [ -e $installed ]; then
 		echo rm $installed
 		rm $installed

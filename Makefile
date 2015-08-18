@@ -12,31 +12,31 @@ CFLAGS   := -pedantic -std=$(CSTD) -Wall -Werror -O3
 CPPFLAGS := -pedantic -std=$(CPPSTD) -Wall -Werror -O3
 LIBFLAGS := -lcrypto -lssl
 
-all : sumpass md5pass sha1pass sha224pass sha256pass sha384pass sha512pass xxhpass
+all : sump md5sump sha1sump sha224sump sha256sump sha384sump sha512sump xxhsump
 
-sumpass : sumpass.cc
-	$(CXX) $(CPPFLAGS) -o sumpass sumpass.cc $(LIBFLAGS)
+sump : sump.cc
+	$(CXX) $(CPPFLAGS) -o sump sump.cc $(LIBFLAGS)
 
-md5pass : md5pass.c
-	$(CC) $(CFLAGS) -o md5pass md5pass.c $(LIBFLAGS)
+md5sump : md5sump.c
+	$(CC) $(CFLAGS) -o md5sump md5sump.c $(LIBFLAGS)
 
-sha1pass : sha1pass.c
-	$(CC) $(CFLAGS) -o sha1pass sha1pass.c $(LIBFLAGS)
+sha1sump : sha1sump.c
+	$(CC) $(CFLAGS) -o sha1sump sha1sump.c $(LIBFLAGS)
 
-sha224pass : sha224pass.c
-	$(CC) $(CFLAGS) -o sha224pass sha224pass.c $(LIBFLAGS)
+sha224sump : sha224sump.c
+	$(CC) $(CFLAGS) -o sha224sump sha224sump.c $(LIBFLAGS)
 
-sha256pass : sha256pass.c
-	$(CC) $(CFLAGS) -o sha256pass sha256pass.c $(LIBFLAGS)
+sha256sump : sha256sump.c
+	$(CC) $(CFLAGS) -o sha256sump sha256sump.c $(LIBFLAGS)
 
-sha384pass : sha384pass.c
-	$(CC) $(CFLAGS) -o sha384pass sha384pass.c $(LIBFLAGS)
+sha384sump : sha384sump.c
+	$(CC) $(CFLAGS) -o sha384sump sha384sump.c $(LIBFLAGS)
 
-sha512pass : sha512pass.c
-	$(CC) $(CFLAGS) -o sha512pass sha512pass.c $(LIBFLAGS)
+sha512sump : sha512sump.c
+	$(CC) $(CFLAGS) -o sha512sump sha512sump.c $(LIBFLAGS)
 
-xxhpass : xxhpass.sh
-	cp xxhpass.sh xxhpass
+xxhsump : xxhsump.sh
+	cp xxhsump.sh xxhsump
 
 test : clean all
 	./test.sh
@@ -50,13 +50,13 @@ uninstall : all
 clean :
 	rm -f *.d
 	rm -f *.o
-	rm -f sumpass
-	rm -f md5pass
-	rm -f sha1pass
-	rm -f sha224pass
-	rm -f sha256pass
-	rm -f sha384pass
-	rm -f sha512pass
-	rm -f xxhpass
+	rm -f sump
+	rm -f md5sump
+	rm -f sha1sump
+	rm -f sha224sump
+	rm -f sha256sump
+	rm -f sha384sump
+	rm -f sha512sump
+	rm -f xxhsump
 
 -include *.d

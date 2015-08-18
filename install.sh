@@ -10,9 +10,9 @@ else
 fi
 cd $bindir
 
-for file in $(ls $dir | grep pass | grep -v -E "\.|Makefile"); do
-	src="$dir/$file"
-	dest="$bindir/$file"
+find $dir -maxdepth 1 -perm -111 -type f | grep -v "\.sh$" | while read file; do
+	src="$file"
+	dest="$bindir/$(basename $file)"
 	echo cp $src $dest
 	cp $src $dest
 done

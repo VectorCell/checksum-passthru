@@ -16,20 +16,20 @@ if [ -n "$(which pv)" ]; then
 	for HASH in $(echo $HASHES | tr ' ' '\n'); do
 		printf "\n$HASH\n"
 		echo "${HASH}sum"
-		for i in {0..0}; do
+		for i in {0..3}; do
 			pv -cN "	" < $TEMPFILE | ${HASH}sum &> /dev/null
 		done
-		echo "${HASH}pass"
-		for i in {0..0}; do
-			pv -cN "	" < $TEMPFILE | ${HASH}pass &> /dev/null
+		echo "${HASH}sump"
+		for i in {0..3}; do
+			pv -cN "	" < $TEMPFILE | ${HASH}sump &> /dev/null
 		done
 		echo "openssl $HASH"
-		for i in {0..0}; do
+		for i in {0..3}; do
 			pv -cN "	" < $TEMPFILE | openssl $HASH &> /dev/null
 		done
-		echo "sumpass $HASH"
-		for i in {0..0}; do
-			pv -cN "	" < $TEMPFILE | sumpass $HASH &> /dev/null
+		echo "sump $HASH"
+		for i in {0..3}; do
+			pv -cN "	" < $TEMPFILE | sump $HASH &> /dev/null
 		done
 	done
 
