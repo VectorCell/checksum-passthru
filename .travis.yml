@@ -12,7 +12,6 @@ addons:
     - clang-3.4
     - libssl-dev
     - wamerican
-    - valgrind
 script:
    - make test
    - make test CC=gcc-4.8 CXX=g++-4.8
