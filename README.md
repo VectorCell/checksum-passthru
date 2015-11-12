@@ -2,10 +2,9 @@
 
 Tool for getting the checksum of piped input while it's in use.
 
-Must be compiled with libssl. This can be installed in Ubuntu with `sudo apt-get install libssl-dev`.
+Must be compiled with libssl. This can be installed in Ubuntu with `sudo apt-get install libssl-dev`. Alternatively, openssl source is available at its [GitHub repo](https://github.com/openssl/openssl).
 
-Use the same way you'd use md5sum-type programs without arguments (getting data from stdin), but
-unlike md5sum-type programs, sump outputs to stderr and passes input from stdin to stdout.
+Use the same way you'd use md5sum-type programs without arguments (getting data from stdin), but unlike md5sum-type programs, sump outputs to stderr and passes input from stdin to stdout.
 
 For example, you could use it to verify a file as it's being downloaded:
 ```
