@@ -29,6 +29,12 @@ digest_fn get_digest_fn(const string& alg) {
 		df = sha384_digest;
 	} else if (alg == "sha512") {
 		df = sha512_digest;
+	} else if (alg == "xor32") {
+		df = xor32_digest;
+	} else if (alg == "xor64") {
+		df = xor64_digest;
+	} else if (alg == "xor128") {
+		df = xor128_digest;
 	}
 	return df;
 }
