@@ -15,7 +15,6 @@ accuracytest1 () {
 	TEMPFILE=/tmp/tempfile-$RANDOM.file
 	dd if=/dev/urandom of=$TEMPFILE bs=1k count=1k 2> /dev/null
 	${1}sum < $TEMPFILE | awk '{print $1}'
-	${1}sump < $TEMPFILE > /dev/null
 	openssl ${1} < $TEMPFILE | awk '{print $2}'
 	sump ${1} < $TEMPFILE > /dev/null
 	rm -f $TEMPFILE
@@ -23,13 +22,11 @@ accuracytest1 () {
 
 accuracytest2 () {
 	${1}sum < /usr/share/dict/words | awk '{print $1}'
-	${1}sump < /usr/share/dict/words > /dev/null
 	openssl ${1} < /usr/share/dict/words | awk '{print $2}'
 	sump ${1} < /usr/share/dict/words > /dev/null
 }
 
 memorytest0 () {
-	$VALGRIND ${1}sump < /usr/share/dict/words > /dev/null
 	$VALGRIND sump $1 < /usr/share/dict/words > /dev/null
 }
 
@@ -37,7 +34,7 @@ memorytest0 () {
 speedtest0 () {
 	SPARSEFILE="sparse-$RANDOM.file"
 	dd if=/dev/zero of=$SPARSEFILE bs=1k count=0 seek=8k 2> /dev/null
-	for POSTFIX in $(echo "sum sump" | tr ' ' '\n'); do
+	for POSTFIX in $(echo "sum" | tr ' ' '\n'); do
 		echo "$1$POSTFIX"
 		time $1$POSTFIX < $SPARSEFILE &> /dev/null
 	done

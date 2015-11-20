@@ -1,10 +1,4 @@
 sump
-md5sump
-sha1sump
-sha224sump
-sha256sump
-sha384sump
-sha512sump
-xxhsump
+sump-thread
 *.d
 *.o

@@ -10,33 +10,15 @@ endif
 
 CFLAGS   := -pedantic -std=$(CSTD) -Wall -Werror -O3
 CPPFLAGS := -pedantic -std=$(CPPSTD) -Wall -Werror -O3
-LIBFLAGS := -lcrypto -lssl
+LIBFLAGS := -lcrypto -lssl -pthread
 
-all : sump md5sump sha1sump sha224sump sha256sump sha384sump sha512sump xxhsump
+all : sump sump-thread
 
 sump : sump.cc
 	$(CXX) $(CPPFLAGS) -o sump sump.cc $(LIBFLAGS)
 
-md5sump : md5sump.c
-	$(CC) $(CFLAGS) -o md5sump md5sump.c $(LIBFLAGS)
-
-sha1sump : sha1sump.c
-	$(CC) $(CFLAGS) -o sha1sump sha1sump.c $(LIBFLAGS)
-
-sha224sump : sha224sump.c
-	$(CC) $(CFLAGS) -o sha224sump sha224sump.c $(LIBFLAGS)
-
-sha256sump : sha256sump.c
-	$(CC) $(CFLAGS) -o sha256sump sha256sump.c $(LIBFLAGS)
-
-sha384sump : sha384sump.c
-	$(CC) $(CFLAGS) -o sha384sump sha384sump.c $(LIBFLAGS)
-
-sha512sump : sha512sump.c
-	$(CC) $(CFLAGS) -o sha512sump sha512sump.c $(LIBFLAGS)
-
-xxhsump : xxhsump.sh
-	cp xxhsump.sh xxhsump
+sump-thread : sump-thread.cc
+	$(CXX) $(CPPFLAGS) -o sump-thread sump-thread.cc $(LIBFLAGS)
 
 test : clean all
 	./test.sh
