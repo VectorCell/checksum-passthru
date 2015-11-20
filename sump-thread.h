@@ -25,6 +25,11 @@
 #	error "BUFFER_SIZE already defined"
 #endif
 
+uint8_t buffer[BUFFER_SIZE];
+pthread_cond_t write_cond, read_cond;
+int n_writers, n_readers;
+pthread_mutex_t lock;
+
 enum digest_elem {
 	DIGEST_NAME,
 	DIGEST_LENGTH,
@@ -38,19 +43,28 @@ typedef std::function<int(void *, const void *, size_t)> update_fn;
 typedef std::function<int(uint8_t *, void *)> final_fn;
 typedef std::tuple<std::string, size_t, void *, init_fn, update_fn, final_fn> digest_type;
 
-typedef struct updater {
-	pthread_mutex_t lock;
-	void *ctx;
-	uint8_t *buf;
-	size_t cnt;
-	size_t dl;
-} updater;
-
+// reads
 void *update (void *ptr) {
-	updater *u = (updater *)ptr;
-	pthread_mutex_lock(&u->lock);
-	pthread_mutex_unlock(&u->lock);
+	size_t *cnt = (size_t *)ptr;
+	pthread_mutex_lock(&lock);
+	while (n_writers > 0)
+		pthread_cond_wait(&write_cond, &lock);
+	++n_readers;
+	pthread_mutex_unlock(&lock);
+	// do read here
+	pthread_mutex_lock(&lock);
+	--n_readers;
+	if (readers == 0)
+		pthread_cond_signal(&read_cond);
+	pthread_mutex_unlock(&lock);
 	return NULL;
+}
+
+void fill_buffer () {
+	pthread_mutex_lock(&lock);
+	++n_writers;
+	while (n_readers > 0)
+		pthread_cond_wait()
 }
 
 std::string final (void *ptr) {
@@ -59,12 +73,9 @@ std::string final (void *ptr) {
 
 template <typename C = std::vector<digest_type>>
 void calc_digests (C digests, FILE *infile, FILE *outfile) {
-
-	pthread_mutex_t lock;
 	pthread_mutex_init(&lock, NULL);
-	pthread_mutex_lock(&lock);
-
-	uint8_t buffer[BUFFER_SIZE];
+	pthread_cond_init(&write_cond, NULL);
+	pthread_cond_init(&read_cond, NULL);
 
 	std::vector<pthread_t> threads(digests.size());
 	std::vector<updater> updaters(digests.size());
