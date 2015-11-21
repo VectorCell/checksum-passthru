@@ -33,12 +33,6 @@ clean :
 	rm -f *.d
 	rm -f *.o
 	rm -f sump
-	rm -f md5sump
-	rm -f sha1sump
-	rm -f sha224sump
-	rm -f sha256sump
-	rm -f sha384sump
-	rm -f sha512sump
-	rm -f xxhsump
+	rm -f sump-thread
 
 -include *.d

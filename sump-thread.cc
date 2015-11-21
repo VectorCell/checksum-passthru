@@ -19,33 +19,34 @@ int no_Final (uint8_t *bytes, void *) {
 	return 0;
 }
 
-int bytecount_Init (void *ptr) {
+int bytecount_Init (void *ctx) {
 	cout << "this is bytecount_Init" << endl;
-	*(uint32_t *)ptr = 0;
+	*(uint32_t *)ctx = 0;
 	return 0;
 }
-int bytecount_Update (void *ptr, const void *buf, size_t cnt) {
-	*(uint32_t *)ptr += cnt;
+int bytecount_Update (void *ctx, const void *buf, size_t cnt) {
+	*(uint32_t *)ctx += cnt;
 	return 0;
 }
-int bytecount_Final (uint8_t *bytes, void *ptr) {
-	void *ret = memcpy(bytes, ptr, sizeof(uint32_t));
+int bytecount_Final (uint8_t *bytes, void *ctx) {
+	void *ret = memcpy(bytes, ctx, sizeof(uint32_t));
 	return (ret == bytes) ? 0 : 1;
 }
 
 int main (int argc, char *argv[]) {
+
 	vector<digest_type> digests;
 
-	void *null = NULL;
-	digests.push_back(digest_type("none", 1, null, no_Init, no_Update, no_Final));
+	digests.push_back({"none", 1, NULL, no_Init, no_Update, no_Final, DIGEST_MAGIC});
 
 	uint32_t bytecount_ctx;
-	digests.push_back(digest_type("bytecount",
-			                      sizeof(uint32_t),
-			                      (void *)&bytecount_ctx,
-			                      bytecount_Init,
-			                      bytecount_Update,
-			                      bytecount_Final));
+	digests.push_back({"bytecount",
+			           sizeof(uint32_t),
+			           (void *)&bytecount_ctx,
+			           bytecount_Init,
+			           bytecount_Update,
+			           bytecount_Final,
+			           DIGEST_MAGIC});
 
 	calc_digests(digests, stdin, stdout);
 
