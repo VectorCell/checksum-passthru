@@ -73,6 +73,9 @@ int main (int argc, char *argv[]) {
 	} else {
 		infile = fopen(infile_name.c_str(), "r");
 	}
+	if (argc >= 3) {
+		infile_name = argv[2];
+	}
 
 	if (outfile_name == "-") {
 		if (isatty(fileno(stdout))) {
