@@ -10,9 +10,11 @@ else
 fi
 cd $bindir
 
-find $dir -maxdepth 1 -perm -111 -type f | grep -v "\.sh$" | while read file; do
-	src="$file"
-	dest="$bindir/$(basename $file)"
-	echo cp $src $dest
-	cp $src $dest
-done
+#find $dir -maxdepth 1 -perm -111 -type f | grep -v "\.sh$" | while read file; do
+#	src="$file"
+#	dest="$bindir/$(basename $file)"
+#	echo cp $src $dest
+#	cp $src $dest
+#done
+
+ln -s $DIR/sump
