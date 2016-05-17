@@ -16,7 +16,7 @@ using namespace std;
 typedef function<string(FILE*, FILE*)> digest_fn;
 
 digest_fn get_digest_fn(const string& alg) {
-	digest_fn df = no_digest;
+	digest_fn df = md5_digest;
 	if (alg == "md5") {
 		df = md5_digest;
 	} else if (alg == "sha1") {
@@ -29,6 +29,8 @@ digest_fn get_digest_fn(const string& alg) {
 		df = sha384_digest;
 	} else if (alg == "sha512") {
 		df = sha512_digest;
+	} else if (alg == "none") {
+		df = no_digest;
 	}
 	return df;
 }
