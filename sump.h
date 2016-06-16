@@ -56,25 +56,55 @@ std::string no_digest (FILE* infile, FILE* outfile) {
 }
 
 std::string md5_digest (FILE* infile, FILE* outfile) {
-	return openssl_digest<MD5_CTX,MD5_DIGEST_LENGTH>(infile, outfile, MD5_Init, MD5_Update, MD5_Final);
+	return openssl_digest<MD5_CTX,MD5_DIGEST_LENGTH>(
+		infile,
+		outfile,
+		MD5_Init,
+		MD5_Update,
+		MD5_Final);
 }
 
 std::string sha1_digest (FILE* infile, FILE* outfile) {
-	return openssl_digest<SHA_CTX,SHA_DIGEST_LENGTH>(infile, outfile, SHA1_Init, SHA1_Update, SHA1_Final);
+	return openssl_digest<SHA_CTX,SHA_DIGEST_LENGTH>(
+		infile,
+		outfile,
+		SHA1_Init,
+		SHA1_Update,
+		SHA1_Final);
 }
 
 std::string sha224_digest (FILE* infile, FILE* outfile) {
-	return openssl_digest<SHA256_CTX,SHA224_DIGEST_LENGTH>(infile, outfile, SHA224_Init, SHA224_Update, SHA224_Final);
+	return openssl_digest<SHA256_CTX,SHA224_DIGEST_LENGTH>(
+		infile,
+		outfile,
+		SHA224_Init,
+		SHA224_Update,
+		SHA224_Final);
 }
 
 std::string sha256_digest (FILE* infile, FILE* outfile) {
-	return openssl_digest<SHA256_CTX,SHA256_DIGEST_LENGTH>(infile, outfile, SHA256_Init, SHA256_Update, SHA256_Final);
+	return openssl_digest<SHA256_CTX,SHA256_DIGEST_LENGTH>(
+		infile,
+		outfile,
+		SHA256_Init,
+		SHA256_Update,
+		SHA256_Final);
 }
 
 std::string sha384_digest (FILE* infile, FILE* outfile) {
-	return openssl_digest<SHA512_CTX,SHA384_DIGEST_LENGTH>(infile, outfile, SHA384_Init, SHA384_Update, SHA384_Final);
+	return openssl_digest<SHA512_CTX,SHA384_DIGEST_LENGTH>(
+		infile,
+		outfile,
+		SHA384_Init,
+		SHA384_Update,
+		SHA384_Final);
 }
 
 std::string sha512_digest (FILE* infile, FILE* outfile) {
-	return openssl_digest<SHA512_CTX,SHA512_DIGEST_LENGTH>(infile, outfile, SHA512_Init, SHA512_Update, SHA512_Final);
+	return openssl_digest<SHA512_CTX,SHA512_DIGEST_LENGTH>(
+		infile,
+		outfile,
+		SHA512_Init,
+		SHA512_Update,
+		SHA512_Final);
 }
