@@ -51,6 +51,7 @@ vector<string> multi_digest (FILE *infile,
 int main (int argc, char *argv[]) {
 	map<string,AbstractDigest*> digest_map;
 	digest_map["none"] = build_digest_none();
+	digest_map["count"] = build_digest_count();
 	digest_map["md5"] = build_digest_md5();
 	digest_map["sha1"] = build_digest_sha1();
 	digest_map["sha224"] = build_digest_sha224();
@@ -128,7 +129,7 @@ int main (int argc, char *argv[]) {
 	vector<string> sums = multi_digest(infile, outfile, digests);
 	if (sums.size() > 1) {
 		for (unsigned k = 0; k < algs.size(); ++k) {
-			fprintf(sumfile, "%s  %s  %s\n",
+			fprintf(sumfile, "%-8s  %s  %s\n",
 				algs[k].c_str(),
 				sums[k].c_str(),
 				infile_name.c_str());

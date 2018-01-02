@@ -6,6 +6,7 @@
 
 #include <cstdio>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <map>
 #include <functional>
@@ -39,6 +40,7 @@ int none_Final (unsigned char*, size_t*) {
 	return 0;
 }
 
+
 class AbstractDigest {
 public:
 	virtual int update (const void *, size_t) = 0;
@@ -46,8 +48,32 @@ public:
 	virtual ~AbstractDigest () = default;
 };
 
+
+class CountDigest : public AbstractDigest {
+
+private:
+
+	size_t _size;
+
+public:
+
+	CountDigest () : _size() {}
+
+	int update (const void *, size_t size) {
+		_size += size;
+		return 0;
+	}
+
+	const std::string finalize () {
+		std::stringstream ss;
+		ss << _size;
+		return ss.str();
+	}
+};
+
+
 template <typename DS, size_t DL>
-class Digest : public AbstractDigest {
+class OpenSSLDigest : public AbstractDigest {
 
 private:
 
@@ -72,7 +98,7 @@ private:
 
 public:
 
-	Digest (fn_init<DS> i, fn_update<DS> u, fn_final<DS> f) :
+	OpenSSLDigest (fn_init<DS> i, fn_update<DS> u, fn_final<DS> f) :
 		_c(),
 		_init(i),
 		_update(u),
@@ -90,50 +116,55 @@ public:
 	}
 };
 
-Digest<size_t,1>* build_digest_none () {
-	return new Digest<size_t,1>(
+
+OpenSSLDigest<size_t,1>* build_digest_none () {
+	return new OpenSSLDigest<size_t,1>(
 		none_Init,
 		none_Update,
 		none_Final);
 }
 
-Digest<MD5_CTX,MD5_DIGEST_LENGTH>* build_digest_md5 () {
-	return new Digest<MD5_CTX,MD5_DIGEST_LENGTH>(
+CountDigest* build_digest_count () {
+	return new CountDigest;
+}
+
+OpenSSLDigest<MD5_CTX,MD5_DIGEST_LENGTH>* build_digest_md5 () {
+	return new OpenSSLDigest<MD5_CTX,MD5_DIGEST_LENGTH>(
 		MD5_Init,
 		MD5_Update,
 		MD5_Final);
 }
 
-Digest<SHA_CTX,SHA_DIGEST_LENGTH>* build_digest_sha1 () {
-	return new Digest<SHA_CTX,SHA_DIGEST_LENGTH>(
+OpenSSLDigest<SHA_CTX,SHA_DIGEST_LENGTH>* build_digest_sha1 () {
+	return new OpenSSLDigest<SHA_CTX,SHA_DIGEST_LENGTH>(
 		SHA1_Init,
 		SHA1_Update,
 		SHA1_Final);
 }
 
-Digest<SHA256_CTX,SHA224_DIGEST_LENGTH>* build_digest_sha224 () {
-	return new Digest<SHA256_CTX,SHA224_DIGEST_LENGTH>(
+OpenSSLDigest<SHA256_CTX,SHA224_DIGEST_LENGTH>* build_digest_sha224 () {
+	return new OpenSSLDigest<SHA256_CTX,SHA224_DIGEST_LENGTH>(
 		SHA224_Init,
 		SHA224_Update,
 		SHA224_Final);
 }
 
-Digest<SHA256_CTX,SHA256_DIGEST_LENGTH>* build_digest_sha256 () {
-	return new Digest<SHA256_CTX,SHA256_DIGEST_LENGTH>(
+OpenSSLDigest<SHA256_CTX,SHA256_DIGEST_LENGTH>* build_digest_sha256 () {
+	return new OpenSSLDigest<SHA256_CTX,SHA256_DIGEST_LENGTH>(
 		SHA256_Init,
 		SHA256_Update,
 		SHA256_Final);
 }
 
-Digest<SHA512_CTX,SHA384_DIGEST_LENGTH>* build_digest_sha384 () {
-	return new Digest<SHA512_CTX,SHA384_DIGEST_LENGTH>(
+OpenSSLDigest<SHA512_CTX,SHA384_DIGEST_LENGTH>* build_digest_sha384 () {
+	return new OpenSSLDigest<SHA512_CTX,SHA384_DIGEST_LENGTH>(
 		SHA384_Init,
 		SHA384_Update,
 		SHA384_Final);
 }
 
-Digest<SHA512_CTX,SHA512_DIGEST_LENGTH>* build_digest_sha512 () {
-	return new Digest<SHA512_CTX,SHA512_DIGEST_LENGTH>(
+OpenSSLDigest<SHA512_CTX,SHA512_DIGEST_LENGTH>* build_digest_sha512 () {
+	return new OpenSSLDigest<SHA512_CTX,SHA512_DIGEST_LENGTH>(
 		SHA512_Init,
 		SHA512_Update,
 		SHA512_Final);
