@@ -126,11 +126,15 @@ int main (int argc, char *argv[]) {
 	}
 
 	vector<string> sums = multi_digest(infile, outfile, digests);
-	for (unsigned k = 0; k < algs.size(); ++k) {
-		fprintf(sumfile, "%s  [%s]  %s\n",
-			sums[k].c_str(),
-			algs[k].c_str(),
-			infile_name.c_str());
+	if (sums.size() > 1) {
+		for (unsigned k = 0; k < algs.size(); ++k) {
+			fprintf(sumfile, "%s  %s  %s\n",
+				algs[k].c_str(),
+				sums[k].c_str(),
+				infile_name.c_str());
+		}
+	} else {
+		fprintf(sumfile, "%s  %s\n", sums[0].c_str(), infile_name.c_str());
 	}
 	for (auto const& p : digest_map) {
 		delete p.second;
