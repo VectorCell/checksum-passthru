@@ -10,7 +10,7 @@ endif
 
 CFLAGS   := -pedantic -std=$(CSTD) -Wall -Werror -O3
 CPPFLAGS := -pedantic -std=$(CPPSTD) -Wall -Werror -O3
-LIBFLAGS := -lcrypto -lssl
+LIBFLAGS := -lcrypto -lssl -fopenmp
 
 all : sump md5sump sha1sump sha224sump sha256sump sha384sump sha512sump xxhsump
 
