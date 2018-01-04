@@ -132,7 +132,8 @@ tar_digest (FILE *infile,
 					// the next header contains the metadata
 					count = read_tar_record(buf, infile);
 					if (count != RECORD_SIZE) {
-						throw malformed_tar_error("reached premature EOF");
+						throw malformed_tar_error(
+							"reached premature EOF while fetching extented header");
 					}
 					next_entry_has_long_name = false;
 				}
@@ -146,7 +147,8 @@ tar_digest (FILE *infile,
 					size_t bytes_read = min(bytes_remaining, RECORD_SIZE);
 					count = read_tar_record(buf, infile);
 					if (count != RECORD_SIZE) {
-						throw malformed_tar_error("reached premature EOF");
+						throw malformed_tar_error(
+							"reached premature EOF while fetching file contents");
 					}
 					count = write_tar_record(buf, outfile);
 					bytes_remaining -= bytes_read;
