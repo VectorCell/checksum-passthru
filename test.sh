@@ -69,14 +69,18 @@ done
 if [ ! -f test.tar ]; then
 	if [ ! -d test ]; then
 		mkdir test
-		dd if=/dev/urandom of=test/file1.rand bs=4k count=4
-		dd if=/dev/urandom of=test/file2.rand bs=4k count=4
-		dd if=/dev/urandom of=test/file3.rand bs=4k count=4
-		dd if=/dev/urandom of=test/file4.rand bs=4k count=4
+		dd if=/dev/urandom of=test/rand1.file bs=4k count=1
+		dd if=/dev/urandom of=test/rand2.file bs=4k count=2
+		dd if=/dev/urandom of=test/rand3.file bs=4k count=3
+		dd if=/dev/urandom of=test/rand4.file bs=4k count=4
 		echo "hello world" > test/text1.txt
 		echo "this is the second file" > test/text2.txt
+		dd if=/dev/zero of=test/zeroes1.file bs=4k count=0 seek=4k
 	fi
-	tar -cvf test.tar test
+	# tarpv test | output-sparse test.tar
+	tar -c test > test.tar
 fi
 
 ./sump-tar md5 < test.tar > /dev/null
+
+rm -f test.tar

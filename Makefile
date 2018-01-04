@@ -41,7 +41,7 @@ sha512sump : sha512sump.c
 xxhsump : xxhsump.sh
 	cp xxhsump.sh xxhsump
 
-test : clean all
+test : all
 	./test.sh
 
 install : all
