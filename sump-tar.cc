@@ -71,8 +71,8 @@ bool filename_digest_comparator (pair<string,string> a,
 // 	return output;
 // }
 
-size_t read_tar_record (char *buf, FILE *f) {
-	size_t res = fread(buf, 1, RECORD_SIZE, f);
+size_t read_tar_record (char *buf, FILE *f, size_t count = RECORD_SIZE) {
+	size_t res = fread(buf, 1, count, f);
 	// if (res != RECORD_SIZE) {
 	// 	// throw malformed_tar_error("tar read not large enough");
 	// 	throw malformed_tar_error("reached premature EOF");
@@ -80,8 +80,8 @@ size_t read_tar_record (char *buf, FILE *f) {
 	return res;
 }
 
-size_t write_tar_record (char *buf, FILE *out) {
-	size_t res = fwrite(buf, 1, RECORD_SIZE, out);
+size_t write_tar_record (char *buf, FILE *out, size_t count = RECORD_SIZE) {
+	size_t res = fwrite(buf, 1, count, out);
 	return res;
 }
 
@@ -146,11 +146,11 @@ tar_digest (FILE *infile,
 				while (bytes_remaining > 0) {
 					size_t bytes_read = min(bytes_remaining, RECORD_SIZE);
 					count = read_tar_record(buf, infile);
-					if (count != RECORD_SIZE) {
-						throw malformed_tar_error(
-							"reached premature EOF while fetching file contents");
-					}
-					count = write_tar_record(buf, outfile);
+					// if (count != RECORD_SIZE) {
+					// 	throw malformed_tar_error(
+					// 		"reached premature EOF while fetching file contents");
+					// }
+					count = write_tar_record(buf, outfile, count);
 					bytes_remaining -= bytes_read;
 					digest.update(buf, bytes_read);
 				}
