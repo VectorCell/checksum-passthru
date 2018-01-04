@@ -23,7 +23,7 @@
 
 const size_t RECORD_SIZE = 512;
 const size_t RECORDS_PER_READ = 8;
-struct posix_header
+typedef struct tar_posix_header
 {                       /* byte offset */
 	char name[100];     /*   0 */
 	char mode[8];       /* 100 */
@@ -42,8 +42,7 @@ struct posix_header
 	char devminor[8];   /* 337 */
 	char prefix[155];   /* 345 */
 	                    /* 500 */
-};
-typedef struct posix_header posix_header;
+} tar_posix_header;
 
 
 template <typename DS = size_t>

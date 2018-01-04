@@ -40,30 +40,38 @@ tar_digest (FILE *infile,
 	size_t count = 0;
 	char buf[RECORD_SIZE * RECORDS_PER_READ];
 	bool next_is_header = true;
+	bool take_sum = true;
 	size_t bytes_remaining = 0;
 	string filename;
 	while ((count = fread(buf, 1, sizeof(buf), infile)) > 0) {
 		fwrite(buf, 1, count, outfile);
 		for (size_t off = 0; off < sizeof(buf); off += RECORD_SIZE) {
 			if (next_is_header) {
-				posix_header *h = reinterpret_cast<posix_header*>(&buf[off]);
+				tar_posix_header *h = reinterpret_cast<tar_posix_header*>(&buf[off]);
 				if (h->name[0] == '\0')
 					continue;
-				filename = h->name;
+				take_sum = (h->typeflag == '\0' || h->typeflag == '0');
+				string name = h->name;
+				string prefix = h->prefix;
+				filename = prefix + name;
 				size_t size = read_num_base(h->size, 8);
 				bytes_remaining = size;
 				if (bytes_remaining > 0) {
 					next_is_header = false;
 				}
-				digest->reset();
+				if (take_sum)
+					digest->reset();
 			} else {
 				size_t n_bytes = min(bytes_remaining, RECORD_SIZE);
-				digest->update(&buf[off], n_bytes);
+				if (take_sum)
+					digest->update(&buf[off], n_bytes);
 				if (bytes_remaining > RECORD_SIZE) {
 					bytes_remaining -= RECORD_SIZE;
 				} else {
-					string hexdigest = digest->finalize();
-					output.push_back(make_pair(filename, hexdigest));
+					if (take_sum) {
+						string hexdigest = digest->finalize();
+						output.push_back(make_pair(filename, hexdigest));
+					}
 					next_is_header = true;
 				}
 			}
