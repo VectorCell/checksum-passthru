@@ -21,6 +21,31 @@
 #endif
 
 
+const size_t RECORD_SIZE = 512;
+const size_t RECORDS_PER_READ = 8;
+struct posix_header
+{                       /* byte offset */
+	char name[100];     /*   0 */
+	char mode[8];       /* 100 */
+	char uid[8];        /* 108 */
+	char gid[8];        /* 116 */
+	char size[12];      /* 124 */
+	char mtime[12];     /* 136 */
+	char chksum[8];     /* 148 */
+	char typeflag;      /* 156 */
+	char linkname[100]; /* 157 */
+	char magic[6];      /* 257 */
+	char version[2];    /* 263 */
+	char uname[32];     /* 265 */
+	char gname[32];     /* 297 */
+	char devmajor[8];   /* 329 */
+	char devminor[8];   /* 337 */
+	char prefix[155];   /* 345 */
+	                    /* 500 */
+};
+typedef struct posix_header posix_header;
+
+
 template <typename DS = size_t>
 using fn_init = std::function<int(DS*)>;
 
@@ -43,6 +68,7 @@ int none_Final (unsigned char*, size_t*) {
 
 class AbstractDigest {
 public:
+	virtual int reset () = 0;
 	virtual int update (const void *, size_t) = 0;
 	virtual const std::string finalize () = 0;
 	virtual ~AbstractDigest () = default;
@@ -58,6 +84,11 @@ private:
 public:
 
 	CountDigest () : _size() {}
+
+	int reset () {
+		_size = 0;
+		return 0;
+	}
 
 	int update (const void *, size_t size) {
 		_size += size;
@@ -83,19 +114,6 @@ private:
 	fn_final<DS>  _final;
 	unsigned char digest[DL];
 
-	std::string get_string () {
-		unsigned char digest[DL];
-		_final(digest, &_c);
-		char out[DL * 2 + 1];
-		for (size_t n = 0; n < DL; ++n) {
-			snprintf(&(out[n * 2]),
-			         DL * 2,
-			         "%02x",
-			         static_cast<unsigned int>(digest[n]));
-		}
-		return std::string(out);
-	}
-
 public:
 
 	OpenSSLDigest (fn_init<DS> i, fn_update<DS> u, fn_final<DS> f) :
@@ -106,13 +124,25 @@ public:
 		_init(&_c);
 	}
 
+	int reset () {
+		return _init(&_c);
+	}
+
 	int update (const void *buffer, size_t size) {
 		return _update(&_c, buffer, size);
 	}
 
 	const std::string finalize () {
-		static const std::string str = get_string();
-		return str;
+		unsigned char digest[DL];
+		_final(digest, &_c);
+		char out[DL * 2 + 1];
+		for (size_t n = 0; n < DL; ++n) {
+			snprintf(&(out[n * 2]),
+			         DL * 2,
+			         "%02x",
+			         static_cast<unsigned int>(digest[n]));
+		}
+		return std::string(out);
 	}
 };
 
@@ -168,4 +198,26 @@ OpenSSLDigest<SHA512_CTX,SHA512_DIGEST_LENGTH>* build_digest_sha512 () {
 		SHA512_Init,
 		SHA512_Update,
 		SHA512_Final);
+}
+
+AbstractDigest* build_digest (std::string name) {
+	if (name == "none") {
+		return build_digest_none();
+	} else if (name == "count") {
+		return build_digest_count();
+	} else if (name == "md5") {
+		return build_digest_md5();
+	} else if (name == "sha1") {
+		return build_digest_sha1();
+	} else if (name == "sha224") {
+		return build_digest_sha224();
+	} else if (name == "sha256") {
+		return build_digest_sha256();
+	} else if (name == "sha384") {
+		return build_digest_sha384();
+	} else if (name == "sha512") {
+		return build_digest_sha512();
+	} else {
+		return build_digest_none();
+	}
 }

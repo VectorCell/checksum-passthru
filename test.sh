@@ -65,3 +65,18 @@ for HASH in $(echo $HASHES | tr ' ' '\n'); do
 		speedtest$i $HASH
 	done
 done
+
+if [ ! -f test.tar ]; then
+	if [ ! -d test ]; then
+		mkdir test
+		dd if=/dev/urandom of=test/file1.rand bs=4k count=4
+		dd if=/dev/urandom of=test/file2.rand bs=4k count=4
+		dd if=/dev/urandom of=test/file3.rand bs=4k count=4
+		dd if=/dev/urandom of=test/file4.rand bs=4k count=4
+		echo "hello world" > test/text1.txt
+		echo "this is the second file" > test/text2.txt
+	fi
+	tar -cvf test.tar test
+fi
+
+./sump-tar md5 < test.tar > /dev/null

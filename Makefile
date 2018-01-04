@@ -12,10 +12,13 @@ CFLAGS   := -pedantic -std=$(CSTD) -Wall -Werror -O3
 CPPFLAGS := -pedantic -std=$(CPPSTD) -Wall -Werror -O3
 LIBFLAGS := -lcrypto -lssl -fopenmp
 
-all : sump md5sump sha1sump sha224sump sha256sump sha384sump sha512sump xxhsump
+all : sump sump-tar md5sump sha1sump sha224sump sha256sump sha384sump sha512sump xxhsump
 
 sump : sump.cc
 	$(CXX) $(CPPFLAGS) -o sump sump.cc $(LIBFLAGS)
+
+sump-tar : sump-tar.cc
+	$(CXX) $(CPPFLAGS) -o sump-tar sump-tar.cc $(LIBFLAGS)
 
 md5sump : md5sump.c
 	$(CC) $(CFLAGS) -o md5sump md5sump.c $(LIBFLAGS)
@@ -51,6 +54,7 @@ clean :
 	rm -f *.d
 	rm -f *.o
 	rm -f sump
+	rm -f sump-tar
 	rm -f md5sump
 	rm -f sha1sump
 	rm -f sha224sump

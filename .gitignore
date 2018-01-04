@@ -1,4 +1,5 @@
 sump
+sump-tar
 md5sump
 sha1sump
 sha224sump
@@ -6,5 +7,7 @@ sha256sump
 sha384sump
 sha512sump
 xxhsump
+test
+test.tar
 *.d
 *.o

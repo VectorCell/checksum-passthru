@@ -18,3 +18,4 @@ cd $bindir
 #done
 
 ln -s $DIR/sump
+ln -s $DIR/sump-tar
