@@ -65,6 +65,10 @@ class Digest {
 
 		Digest& operator = (const Digest& d) = delete;
 
+		bool operator == (const Digest& other) {
+			return _p == other._p;
+		}
+
 		~Digest () {
 			delete _p;
 		}
@@ -155,7 +159,8 @@ class OpenSSLDigest : public AbstractDigest {
 };
 
 
-OpenSSLDigest<size_t,1>* build_digest_none () {
+OpenSSLDigest<size_t,1>*
+build_digest_none () {
 	static auto none_Init = [] (size_t*) { return 0; };
 	static auto none_Update = [] (size_t*, const void*, size_t) { return 0; };
 	static auto none_Final = [] (unsigned char*, size_t*) { return 0; };
@@ -165,67 +170,77 @@ OpenSSLDigest<size_t,1>* build_digest_none () {
 		none_Final);
 }
 
-CountDigest* build_digest_count () {
+CountDigest*
+build_digest_count () {
 	return new CountDigest;
 }
 
-OpenSSLDigest<MD4_CTX,MD4_DIGEST_LENGTH>* build_digest_md4 () {
+OpenSSLDigest<MD4_CTX,MD4_DIGEST_LENGTH>*
+build_digest_md4 () {
 	return new OpenSSLDigest<MD4_CTX,MD4_DIGEST_LENGTH>(
 		MD4_Init,
 		MD4_Update,
 		MD4_Final);
 }
 
-OpenSSLDigest<MD5_CTX,MD5_DIGEST_LENGTH>* build_digest_md5 () {
+OpenSSLDigest<MD5_CTX,MD5_DIGEST_LENGTH>*
+build_digest_md5 () {
 	return new OpenSSLDigest<MD5_CTX,MD5_DIGEST_LENGTH>(
 		MD5_Init,
 		MD5_Update,
 		MD5_Final);
 }
 
-OpenSSLDigest<SHA_CTX,SHA_DIGEST_LENGTH>* build_digest_sha1 () {
+OpenSSLDigest<SHA_CTX,SHA_DIGEST_LENGTH>*
+build_digest_sha1 () {
 	return new OpenSSLDigest<SHA_CTX,SHA_DIGEST_LENGTH>(
 		SHA1_Init,
 		SHA1_Update,
 		SHA1_Final);
 }
 
-OpenSSLDigest<SHA256_CTX,SHA224_DIGEST_LENGTH>* build_digest_sha224 () {
+OpenSSLDigest<SHA256_CTX,SHA224_DIGEST_LENGTH>*
+build_digest_sha224 () {
 	return new OpenSSLDigest<SHA256_CTX,SHA224_DIGEST_LENGTH>(
 		SHA224_Init,
 		SHA224_Update,
 		SHA224_Final);
 }
 
-OpenSSLDigest<SHA256_CTX,SHA256_DIGEST_LENGTH>* build_digest_sha256 () {
+OpenSSLDigest<SHA256_CTX,SHA256_DIGEST_LENGTH>*
+build_digest_sha256 () {
 	return new OpenSSLDigest<SHA256_CTX,SHA256_DIGEST_LENGTH>(
 		SHA256_Init,
 		SHA256_Update,
 		SHA256_Final);
 }
 
-OpenSSLDigest<SHA512_CTX,SHA384_DIGEST_LENGTH>* build_digest_sha384 () {
+OpenSSLDigest<SHA512_CTX,SHA384_DIGEST_LENGTH>*
+build_digest_sha384 () {
 	return new OpenSSLDigest<SHA512_CTX,SHA384_DIGEST_LENGTH>(
 		SHA384_Init,
 		SHA384_Update,
 		SHA384_Final);
 }
 
-OpenSSLDigest<SHA512_CTX,SHA512_DIGEST_LENGTH>* build_digest_sha512 () {
+OpenSSLDigest<SHA512_CTX,SHA512_DIGEST_LENGTH>*
+build_digest_sha512 () {
 	return new OpenSSLDigest<SHA512_CTX,SHA512_DIGEST_LENGTH>(
 		SHA512_Init,
 		SHA512_Update,
 		SHA512_Final);
 }
 
-OpenSSLDigest<WHIRLPOOL_CTX,WHIRLPOOL_DIGEST_LENGTH>* build_digest_whirlpool () {
+OpenSSLDigest<WHIRLPOOL_CTX,WHIRLPOOL_DIGEST_LENGTH>*
+build_digest_whirlpool () {
 	return new OpenSSLDigest<WHIRLPOOL_CTX,WHIRLPOOL_DIGEST_LENGTH>(
 		WHIRLPOOL_Init,
 		WHIRLPOOL_Update,
 		WHIRLPOOL_Final);
 }
 
-OpenSSLDigest<RIPEMD160_CTX,RIPEMD160_DIGEST_LENGTH>* build_digest_ripemd160 () {
+OpenSSLDigest<RIPEMD160_CTX,RIPEMD160_DIGEST_LENGTH>*
+build_digest_ripemd160 () {
 	return new OpenSSLDigest<RIPEMD160_CTX,RIPEMD160_DIGEST_LENGTH>(
 		RIPEMD160_Init,
 		RIPEMD160_Update,
@@ -237,6 +252,8 @@ AbstractDigest* build_digest (std::string name) {
 		return build_digest_none();
 	} else if (name == "count") {
 		return build_digest_count();
+	} else if (name == "md4") {
+		return build_digest_md4();
 	} else if (name == "md5") {
 		return build_digest_md5();
 	} else if (name == "sha1") {
@@ -249,6 +266,10 @@ AbstractDigest* build_digest (std::string name) {
 		return build_digest_sha384();
 	} else if (name == "sha512") {
 		return build_digest_sha512();
+	} else if (name == "whirlpool") {
+		return build_digest_whirlpool();
+	} else if (name == "ripemd160") {
+		return build_digest_ripemd160();
 	} else {
 		return build_digest_none();
 	}
@@ -347,6 +368,45 @@ struct TARFileHeader {
 	}
 };
 
+
+class malformed_tar_error : public std::exception {
+
+	private:
+
+		std::string _msg;
+
+	public:
+
+		malformed_tar_error (const char *str) : _msg() {
+			_msg = "malformed_tar_error: ";
+			_msg += str;
+		}
+
+		const char* what () const noexcept {
+			return _msg.c_str();
+		}
+};
+
+
+class passthrough_error : public std::exception {
+
+	private:
+
+		std::string _msg;
+
+	public:
+
+		passthrough_error (const char *str) : _msg() {
+			_msg = "passthrough_error: ";
+			_msg += str;
+		}
+
+		const char* what () const noexcept {
+			return _msg.c_str();
+		}
+};
+
+
 bool filename_digest_comparator (std::pair<std::string,std::string> a,
                                  std::pair<std::string,std::string> b) {
 	// when intending compatibility with GNU sort, use LC_COLLATE=C
@@ -363,21 +423,15 @@ size_t tar_record_write (char *buf, FILE *f) {
 	return fwrite(buf, 1, RECORD_SIZE, f);
 }
 
-
-class malformed_tar_error : public std::exception {
-
-private:
-
-	std::string _msg;
-
-public:
-
-	malformed_tar_error (const char *str) : _msg() {
-		_msg = "malformed_tar_error: ";
-		_msg += str;
+size_t tar_record_read (char* buf, FILE *in, FILE *out) {
+	size_t count_in = tar_record_read(buf, in);
+	if (count_in != 0) {
+		size_t count_out = tar_record_write(buf, out);
+		if (count_in != count_out) {
+			throw passthrough_error("count_in != count_out");
+		}
+		return count_in;
+	} else {
+		return 0;
 	}
-
-	const char* what () const noexcept {
-		return _msg.c_str();
-	}
-};
+}

@@ -38,7 +38,7 @@ tar_digest (FILE *infile,
 	size_t record_num = 0;
 	while (true) {
 
-		count = tar_record_read(buf, infile);
+		count = tar_record_read(buf, infile, outfile);
 		if (count < RECORD_SIZE) {
 			break;
 		}
@@ -54,12 +54,6 @@ tar_digest (FILE *infile,
 			size = header->getFileSize();
 			type = header->typeFlag;
 
-			// cerr << "THIS IS A FILE HEADER (record " << record_num << ")" << endl;
-			// cerr << "filename: " << filename << endl;
-			// cerr << "type:     " << header->typeFlag << endl;
-			// cerr << "size:     " << size << endl;
-			// cerr << endl;
-
 			if (type == '\0' || type == '0') {
 				// regular file
 
@@ -67,8 +61,7 @@ tar_digest (FILE *infile,
 				digest.reset();
 				while (size > 0) {
 					size_t bytes_read = min(size, RECORD_SIZE);
-					count = tar_record_read(buf, infile);
-					count = tar_record_write(buf, outfile);
+					count = tar_record_read(buf, infile, outfile);
 					size -= bytes_read;
 					digest.update(buf, bytes_read);
 				}
@@ -81,7 +74,7 @@ tar_digest (FILE *infile,
 				long_filename = true;
 				filename = "";
 				while (size > 0) {
-					count = tar_record_read(buf, infile);
+					count = tar_record_read(buf, infile, outfile);
 					filename += string(buf, min(size, RECORD_SIZE));
 					size -= min(size, RECORD_SIZE);
 				}

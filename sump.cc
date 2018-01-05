@@ -52,12 +52,15 @@ int main (int argc, char *argv[]) {
 	map<string,AbstractDigest*> digest_map;
 	digest_map["none"] = build_digest_none();
 	digest_map["count"] = build_digest_count();
+	digest_map["md4"] = build_digest_md4();
 	digest_map["md5"] = build_digest_md5();
 	digest_map["sha1"] = build_digest_sha1();
 	digest_map["sha224"] = build_digest_sha224();
 	digest_map["sha256"] = build_digest_sha256();
 	digest_map["sha384"] = build_digest_sha384();
 	digest_map["sha512"] = build_digest_sha512();
+	digest_map["whirlpool"] = build_digest_whirlpool();
+	digest_map["ripemd160"] = build_digest_ripemd160();
 	vector<string> algs;
 	vector<AbstractDigest*> digests;
 	FILE* infile;
