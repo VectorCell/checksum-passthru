@@ -11,79 +11,11 @@
 #include <unistd.h>
 #include <cstring>
 #include <cassert>
+#include <cctype>
 
 #include "sump.h"
 
 using namespace std;
-
-
-bool filename_digest_comparator (pair<string,string> a,
-                                 pair<string,string> b) {
-	return a.first < b.first;
-}
-
-// vector<pair<string,string>>
-// tar_digest (FILE *infile,
-//             FILE *outfile,
-//             AbstractDigest* digest) {
-// 	vector<pair<string,string>> output;
-// 	size_t count = 0;
-// 	char buf[RECORD_SIZE * RECORDS_PER_READ];
-// 	bool next_is_header = true;
-// 	bool take_sum = true;
-// 	size_t bytes_remaining = 0;
-// 	string filename;
-// 	while ((count = fread(buf, 1, sizeof(buf), infile)) > 0) {
-// 		fwrite(buf, 1, count, outfile);
-// 		for (size_t off = 0; off < sizeof(buf); off += RECORD_SIZE) {
-// 			if (next_is_header) {
-// 				tar_posix_header *h = reinterpret_cast<tar_posix_header*>(&buf[off]);
-// 				if (h->name[0] == '\0')
-// 					continue;
-// 				take_sum = (h->typeflag == '\0' || h->typeflag == '0');
-// 				string name = h->name;
-// 				string prefix = h->prefix;
-// 				filename = prefix + name;
-// 				size_t size = decode(h->size, 8);
-// 				bytes_remaining = size;
-// 				if (bytes_remaining > 0) {
-// 					next_is_header = false;
-// 				}
-// 				if (take_sum)
-// 					digest->reset();
-// 			} else {
-// 				size_t n_bytes = min(bytes_remaining, RECORD_SIZE);
-// 				if (take_sum)
-// 					digest->update(&buf[off], n_bytes);
-// 				if (bytes_remaining > RECORD_SIZE) {
-// 					bytes_remaining -= RECORD_SIZE;
-// 				} else {
-// 					if (take_sum) {
-// 						string hexdigest = digest->finalize();
-// 						output.push_back(make_pair(filename, hexdigest));
-// 					}
-// 					next_is_header = true;
-// 				}
-// 			}
-// 		}
-// 	}
-// 	sort(begin(output), end(output), filename_digest_comparator);
-// 	return output;
-// }
-
-size_t read_tar_record (char *buf, FILE *f, size_t count = RECORD_SIZE) {
-	size_t res = fread(buf, 1, count, f);
-	// if (res != RECORD_SIZE) {
-	// 	// throw malformed_tar_error("tar read not large enough");
-	// 	throw malformed_tar_error("reached premature EOF");
-	// }
-	return res;
-}
-
-size_t write_tar_record (char *buf, FILE *out, size_t count = RECORD_SIZE) {
-	size_t res = fwrite(buf, 1, count, out);
-	return res;
-}
 
 vector<pair<string,string>>
 tar_digest (FILE *infile,
@@ -91,81 +23,79 @@ tar_digest (FILE *infile,
             Digest& digest) {
 
 	vector<pair<string,string>> output;
-	// vector<char> buffer(RECORD_SIZE);
-	// char *buf = &buffer[0];
 	char buf[RECORD_SIZE];
 	TARFileHeader * const header = reinterpret_cast<TARFileHeader*>(&buf[0]);
-
 
 	assert(sizeof(TARFileHeader) == RECORD_SIZE);
 	char zeroblock[RECORD_SIZE];
 	memset(zeroblock, 0, RECORD_SIZE);
 
-	bool next_entry_has_long_name = false;
+	string filename;
+	bool long_filename = false;
+	size_t size = 0;
+	char type = '\0';
 	size_t count = 0;
+	size_t record_num = 0;
 	while (true) {
 
-		count = read_tar_record(buf, infile);
+		count = tar_record_read(buf, infile);
 		if (count < RECORD_SIZE) {
 			break;
 		}
 
-		string filename(
-			header->filename,
-			min(static_cast<size_t>(100), strlen(header->filename)));
-		size_t prefix_len = strlen(header->filenamePrefix);
-		if (prefix_len > 0) {
-			filename = string(header->filenamePrefix) + "/" + filename;
-		}
-
 		if (header->checkChecksum()) {
+
+			// metadata
+			if (long_filename) {
+				long_filename = false;
+			} else {
+				filename = header->getFilename();
+			}
+			size = header->getFileSize();
+			type = header->typeFlag;
+
 			// cerr << "THIS IS A FILE HEADER (record " << record_num << ")" << endl;
 			// cerr << "filename: " << filename << endl;
 			// cerr << "type:     " << header->typeFlag << endl;
-			// cerr << "size:     " << header->getFileSize() << endl;
+			// cerr << "size:     " << size << endl;
+			// cerr << endl;
 
-			// regular file
-			if (header->typeFlag == '\0' || header->typeFlag == '0') {
-
-				if (next_entry_has_long_name) {
-					filename = string(header->filename);
-					// the next header contains the metadata
-					count = read_tar_record(buf, infile);
-					if (count != RECORD_SIZE) {
-						throw malformed_tar_error(
-							"reached premature EOF while fetching extented header");
-					}
-					next_entry_has_long_name = false;
-				}
-
-				size_t size = header->getFileSize();
-				size_t bytes_remaining = size;
+			if (type == '\0' || type == '0') {
+				// regular file
 
 				// reads file
 				digest.reset();
-				while (bytes_remaining > 0) {
-					size_t bytes_read = min(bytes_remaining, RECORD_SIZE);
-					count = read_tar_record(buf, infile);
-					// if (count != RECORD_SIZE) {
-					// 	throw malformed_tar_error(
-					// 		"reached premature EOF while fetching file contents");
-					// }
-					count = write_tar_record(buf, outfile, count);
-					bytes_remaining -= bytes_read;
+				while (size > 0) {
+					size_t bytes_read = min(size, RECORD_SIZE);
+					count = tar_record_read(buf, infile);
+					count = tar_record_write(buf, outfile);
+					size -= bytes_read;
 					digest.update(buf, bytes_read);
 				}
 				output.push_back(make_pair(filename, digest.finalize()));
 
-			} else if (header->typeFlag == '5') {
-				// directory
-			} else if (header->typeFlag == 'L') {
-				next_entry_has_long_name = true;
+			} else if (type == '5') {
+				// directory, do nothing
+
+			} else if (type == 'L') {
+				long_filename = true;
+				filename = "";
+				while (size > 0) {
+					count = tar_record_read(buf, infile);
+					filename += string(buf, min(size, RECORD_SIZE));
+					size -= min(size, RECORD_SIZE);
+				}
+				filename.pop_back();
+
 			} else {
 				// unhandled type
+				cerr << "ERROR: unhandled header type: " << type << endl;
 			}
 		} else {
-			// doesn't match checksum
+			// doesn't match checksum, ignore for now
 		}
+
+		++record_num;
 	}
 	return output;
 }

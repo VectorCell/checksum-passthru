@@ -13,8 +13,11 @@
 #include <algorithm>
 #include <exception>
 
+#include <openssl/md4.h>
 #include <openssl/md5.h>
+#include <openssl/ripemd.h>
 #include <openssl/sha.h>
+#include <openssl/whrlpool.h>
 
 #ifndef BUFFER_SIZE
 #	define BUFFER_SIZE (1024U * 32U)
@@ -32,137 +35,130 @@ using fn_update = std::function<int(DS*, const void*, size_t)>;
 template <typename DS = size_t>
 using fn_final = std::function<int(unsigned char*, DS*)>;
 
-int none_Init (size_t*) {
-	return 0;
-}
-int none_Update (size_t*, const void*, size_t) {
-	return 0;
-}
-int none_Final (unsigned char*, size_t*) {
-	return 0;
-}
-
 
 class AbstractDigest {
-public:
-	virtual int reset () = 0;
-	virtual int update (const void *, size_t) = 0;
-	virtual const std::string finalize () = 0;
-	virtual ~AbstractDigest () = default;
+	public:
+		virtual int reset () = 0;
+		virtual int update (const void *, size_t) = 0;
+		virtual const std::string finalize () = 0;
+		virtual ~AbstractDigest () = default;
 };
 
 
 class Digest {
 
-private:
+	private:
 
-	AbstractDigest *_p;
+		AbstractDigest *_p;
 
-public:
+	public:
 
-	Digest () : _p(nullptr) {};
+		Digest () : _p(nullptr) {};
 
-	Digest (AbstractDigest *p) : _p(p) {};
+		Digest (AbstractDigest *p) : _p(p) {};
 
-	Digest (const Digest& d) = delete;
+		Digest (const Digest& d) = delete;
 
-	Digest (Digest&& d) {
-		std::swap(_p, d._p);
-	}
+		Digest (Digest&& d) {
+			std::swap(_p, d._p);
+		}
 
-	Digest& operator = (const Digest& d) = delete;
+		Digest& operator = (const Digest& d) = delete;
 
-	~Digest () {
-		delete _p;
-	}
+		~Digest () {
+			delete _p;
+		}
 
-	int reset () {
-		return _p->reset();
-	}
+		int reset () {
+			return _p->reset();
+		}
 
-	int update (const void *buffer, size_t size) {
-		return _p->update(buffer, size);
-	}
+		int update (const void *buffer, size_t size) {
+			return _p->update(buffer, size);
+		}
 
-	const std::string finalize () {
-		return _p->finalize();
-	}
+		const std::string finalize () {
+			return _p->finalize();
+		}
 };
 
 
 class CountDigest : public AbstractDigest {
 
-private:
+	private:
 
-	size_t _size;
+		size_t _size;
 
-public:
+	public:
 
-	CountDigest () : _size() {}
+		CountDigest () : _size() {}
 
-	int reset () {
-		_size = 0;
-		return 0;
-	}
+		int reset () {
+			_size = 0;
+			return 0;
+		}
 
-	int update (const void *, size_t size) {
-		_size += size;
-		return 0;
-	}
+		int update (const void *, size_t size) {
+			_size += size;
+			return 0;
+		}
 
-	const std::string finalize () {
-		std::stringstream ss;
-		ss << _size;
-		return ss.str();
-	}
+		const std::string finalize () {
+			std::stringstream ss;
+			ss << _size;
+			return ss.str();
+		}
 };
 
 
 template <typename DS, size_t DL>
 class OpenSSLDigest : public AbstractDigest {
 
-private:
+	private:
 
-	DS _c;
-	fn_init<DS>   _init;
-	fn_update<DS> _update;
-	fn_final<DS>  _final;
-	unsigned char digest[DL];
-
-public:
-
-	OpenSSLDigest (fn_init<DS> i, fn_update<DS> u, fn_final<DS> f) :
-		_c(),
-		_init(i),
-		_update(u),
-		_final(f) {
-		_init(&_c);
-	}
-
-	int reset () {
-		return _init(&_c);
-	}
-
-	int update (const void *buffer, size_t size) {
-		return _update(&_c, buffer, size);
-	}
-
-	const std::string finalize () {
+		DS _c;
+		fn_init<DS>   _init;
+		fn_update<DS> _update;
+		fn_final<DS>  _final;
 		unsigned char digest[DL];
-		_final(digest, &_c);
-		char out[DL * 2 + 1];
-		for (size_t n = 0; n < DL; ++n) {
-			snprintf(&(out[n * 2]),
-					 DL * 2,
-					 "%02x",
-					 static_cast<unsigned int>(digest[n]));
+
+	public:
+
+		OpenSSLDigest (fn_init<DS> i, fn_update<DS> u, fn_final<DS> f) :
+			_c(),
+			_init(i),
+			_update(u),
+			_final(f) {
+			_init(&_c);
 		}
-		return std::string(out);
-	}
+
+		int reset () {
+			return _init(&_c);
+		}
+
+		int update (const void *buffer, size_t size) {
+			return _update(&_c, buffer, size);
+		}
+
+		const std::string finalize () {
+			unsigned char digest[DL];
+			_final(digest, &_c);
+			char out[DL * 2 + 1];
+			for (size_t n = 0; n < DL; ++n) {
+				snprintf(&(out[n * 2]),
+				         DL * 2,
+				         "%02x",
+				         static_cast<unsigned int>(digest[n]));
+			}
+			return std::string(out);
+		}
 };
 
 
 OpenSSLDigest<size_t,1>* build_digest_none () {
+	static auto none_Init = [] (size_t*) { return 0; };
+	static auto none_Update = [] (size_t*, const void*, size_t) { return 0; };
+	static auto none_Final = [] (unsigned char*, size_t*) { return 0; };
 	return new OpenSSLDigest<size_t,1>(
 		none_Init,
 		none_Update,
@@ -171,6 +167,13 @@ OpenSSLDigest<size_t,1>* build_digest_none () {
 
 CountDigest* build_digest_count () {
 	return new CountDigest;
+}
+
+OpenSSLDigest<MD4_CTX,MD4_DIGEST_LENGTH>* build_digest_md4 () {
+	return new OpenSSLDigest<MD4_CTX,MD4_DIGEST_LENGTH>(
+		MD4_Init,
+		MD4_Update,
+		MD4_Final);
 }
 
 OpenSSLDigest<MD5_CTX,MD5_DIGEST_LENGTH>* build_digest_md5 () {
@@ -213,6 +216,20 @@ OpenSSLDigest<SHA512_CTX,SHA512_DIGEST_LENGTH>* build_digest_sha512 () {
 		SHA512_Init,
 		SHA512_Update,
 		SHA512_Final);
+}
+
+OpenSSLDigest<WHIRLPOOL_CTX,WHIRLPOOL_DIGEST_LENGTH>* build_digest_whirlpool () {
+	return new OpenSSLDigest<WHIRLPOOL_CTX,WHIRLPOOL_DIGEST_LENGTH>(
+		WHIRLPOOL_Init,
+		WHIRLPOOL_Update,
+		WHIRLPOOL_Final);
+}
+
+OpenSSLDigest<RIPEMD160_CTX,RIPEMD160_DIGEST_LENGTH>* build_digest_ripemd160 () {
+	return new OpenSSLDigest<RIPEMD160_CTX,RIPEMD160_DIGEST_LENGTH>(
+		RIPEMD160_Init,
+		RIPEMD160_Update,
+		RIPEMD160_Final);
 }
 
 AbstractDigest* build_digest (std::string name) {
@@ -295,43 +312,56 @@ struct TARFileHeader {
 	char filenamePrefix[155];
 	char padding[12]; //Nothing of interest, but relevant for checksum
 
-	/**
-	 * @return true if and only if
-	 */
-	bool isUSTAR() {
+	bool isUSTAR () {
 		return (memcmp("ustar", ustarIndicator, 5) == 0);
 	}
 
-	/**
-	 * @return The filesize in bytes
-	 */
-	size_t getFileSize() {
+	size_t getFileSize () {
 		return decode(fileSize, 8);
 	}
 
-	/**
-	 * Return true if and only if the header checksum is correct
-	 * @return
-	 */
-	bool checkChecksum() {
-		//We need to set the checksum to zer
-		char originalChecksum[8];
-		memcpy(originalChecksum, checksum, 8);
-		memset(checksum, ' ', 8);
-		//Calculate the checksum -- both signed and unsigned
-		size_t unsignedSum = 0;
-		size_t signedSum = 0;
-		for (unsigned i = 0; i < sizeof (TARFileHeader); i++) {
-			unsignedSum += ((unsigned char*) this)[i];
-			signedSum += ((signed char*) this)[i];
+	std::string getFilename () {
+		std::string name(
+			filename,
+			std::min(static_cast<size_t>(100), strlen(filename)));
+		size_t prefix_len = strlen(filenamePrefix);
+		if (prefix_len > 0) {
+			name = std::string(filenamePrefix) + "/" + filename;
 		}
-		//Copy back the checksum
-		memcpy(checksum, originalChecksum, 8);
-		//Decode the original checksum
-		size_t referenceChecksum = decode(originalChecksum, 8);
-		return (referenceChecksum == unsignedSum || referenceChecksum == signedSum);
+		return name;
+	}
+
+	bool checkChecksum () {
+		char orig[sizeof(checksum)];
+		memcpy(orig, checksum, sizeof(checksum));
+		memset(checksum, ' ', sizeof(checksum));
+		size_t usum = 0;
+		size_t ssum = 0;
+		for (unsigned i = 0; i < sizeof(*this); ++i) {
+			usum += reinterpret_cast<unsigned char*>(this)[i];
+			ssum += reinterpret_cast<signed char*>(this)[i];
+		}
+		memcpy(checksum, orig, sizeof(checksum));
+		size_t ref = decode(orig, 8);
+		return (ref == usum || ref == ssum);
 	}
 };
+
+bool filename_digest_comparator (std::pair<std::string,std::string> a,
+                                 std::pair<std::string,std::string> b) {
+	// when intending compatibility with GNU sort, use LC_COLLATE=C
+	return std::lexicographical_compare(
+		a.first.begin(), a.first.end(),
+		b.first.begin(), b.first.end());
+}
+
+size_t tar_record_read (char *buf, FILE *f) {
+	return fread(buf, 1, RECORD_SIZE, f);
+}
+
+size_t tar_record_write (char *buf, FILE *f) {
+	return fwrite(buf, 1, RECORD_SIZE, f);
+}
 
 
 class malformed_tar_error : public std::exception {
