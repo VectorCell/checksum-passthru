@@ -425,13 +425,11 @@ size_t tar_record_write (char *buf, FILE *f) {
 
 size_t tar_record_read (char* buf, FILE *in, FILE *out) {
 	size_t count_in = tar_record_read(buf, in);
-	if (count_in != 0) {
+	if (out != nullptr && count_in != 0) {
 		size_t count_out = tar_record_write(buf, out);
 		if (count_in != count_out) {
 			throw passthrough_error("count_in != count_out");
 		}
-		return count_in;
-	} else {
-		return 0;
 	}
+	return count_in;
 }
