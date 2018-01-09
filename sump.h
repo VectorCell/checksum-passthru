@@ -15,6 +15,8 @@
 
 #include <cassert>
 
+#include "xxhash.h"
+
 #include <openssl/md4.h>
 #include <openssl/md5.h>
 #include <openssl/ripemd.h>
@@ -42,7 +44,7 @@ class AbstractDigest {
 	public:
 		virtual int reset () = 0;
 		virtual int update (const void *, size_t) = 0;
-		virtual const std::string finalize () = 0;
+		virtual std::string finalize () = 0;
 		virtual ~AbstractDigest () = default;
 };
 
@@ -83,7 +85,7 @@ class Digest {
 			return _p->update(buffer, size);
 		}
 
-		const std::string finalize () {
+		std::string finalize () {
 			return _p->finalize();
 		}
 };
@@ -109,7 +111,7 @@ class CountDigest : public AbstractDigest {
 			return 0;
 		}
 
-		const std::string finalize () {
+		std::string finalize () {
 			std::stringstream ss;
 			ss << _size;
 			return ss.str();
@@ -146,7 +148,7 @@ class OpenSSLDigest : public AbstractDigest {
 			return _update(&_c, buffer, size);
 		}
 
-		const std::string finalize () {
+		std::string finalize () {
 			unsigned char digest[DL];
 			_final(digest, &_c);
 			char out[DL * 2 + 1];
@@ -157,6 +159,41 @@ class OpenSSLDigest : public AbstractDigest {
 				         static_cast<unsigned int>(digest[n]));
 			}
 			return std::string(out);
+		}
+};
+
+
+class XXDigest : public AbstractDigest {
+
+	private:
+
+		XXH64_state_t *_state;
+
+	public:
+
+		XXDigest () :
+			_state(XXH64_createState()) {}
+
+		~XXDigest () {
+			XXH64_freeState(_state);
+		}
+
+		int reset () {
+			XXH_errorcode const resetResult = XXH64_reset(_state, 0);
+			return resetResult != XXH_ERROR;
+		}
+
+		int update (const void *buffer, size_t size) {
+			XXH_errorcode const addResult = XXH64_update(_state, buffer, size);
+			return addResult != XXH_ERROR;
+		}
+
+		std::string finalize () {
+			uint64_t result = XXH64_digest(_state);
+			std::stringstream ss;
+			ss << std::hex;
+			ss << result;
+			return ss.str();
 		}
 };
 
@@ -249,6 +286,11 @@ build_digest_ripemd160 () {
 		RIPEMD160_Final);
 }
 
+XXDigest*
+build_digest_xxh () {
+	return new XXDigest;
+}
+
 AbstractDigest* build_digest (std::string name) {
 	if (name == "none") {
 		return build_digest_none();
@@ -272,6 +314,8 @@ AbstractDigest* build_digest (std::string name) {
 		return build_digest_whirlpool();
 	} else if (name == "ripemd160") {
 		return build_digest_ripemd160();
+	} else if (name == "xxh") {
+		return build_digest_xxh();
 	} else {
 		return build_digest_none();
 	}
@@ -419,25 +463,6 @@ bool filename_digest_comparator (std::pair<std::string,std::string> a,
 		a.first.begin(), a.first.end(),
 		b.first.begin(), b.first.end());
 }
-
-// size_t tar_record_read (char *buf, FILE *f) {
-// 	return fread(buf, 1, RECORD_SIZE, f);
-// }
-
-// size_t tar_record_write (char *buf, FILE *f) {
-// 	return fwrite(buf, 1, RECORD_SIZE, f);
-// }
-
-// size_t tar_record_read (char* buf, FILE *in, FILE *out) {
-// 	size_t count_in = tar_record_read(buf, in);
-// 	if (out != nullptr && count_in != 0) {
-// 		size_t count_out = tar_record_write(buf, out);
-// 		if (count_in != count_out) {
-// 			throw passthrough_error("count_in != count_out");
-// 		}
-// 	}
-// 	return count_in;
-// }
 
 
 class TARFileReader {
