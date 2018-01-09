@@ -1,7 +1,7 @@
 .PHONY : clean test
 
 CSTD   := c99
-CPPSTD := c++17
+CPPSTD := c++11
 
 ifeq "$(CXX)" "g++"
 	GCCVERSIONLT48 := $(shell expr `gcc -dumpversion` \< 4.8)

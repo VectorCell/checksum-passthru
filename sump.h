@@ -16,8 +16,13 @@
 
 #include <cstdio>
 #include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #include "xxhash.h"
+#include "sumpexcept.h"
 
 #include <openssl/md4.h>
 #include <openssl/md5.h>
@@ -201,6 +206,96 @@ class XXDigest : public AbstractDigest {
 };
 
 
+/*
+class FFProbeDigest : public AbstractDigest {
+
+	private:
+
+		pid_t _pid;
+		int _fd_p2c, _fd_c2p;
+
+		char _buf_c2p[BUFFER_SIZE];
+
+		std::string _output;
+
+		void create_child (int pipe_p2c[2], int pipe_c2p[2]) {
+			// while ((dup2(pipe_p2c[0], STDIN_FILENO) == -1) && (errno == EINTR)) {}
+			// while ((dup2(pipe_c2p[1], STDERR_FILENO) == -1) && (errno == EINTR)) {}
+			// close(pipe_p2c[1]);
+			// close(pipe_c2p[0]);
+
+			// call exec
+			char *argv[] = {
+				nullptr
+			};
+			execv("md5sum", argv);
+			exit(1);
+		}
+
+		void create_parent(int pipe_p2c[2], int pipe_c2p[2]) {
+			// _fd_p2c = pipe_p2c[1];
+			// _fd_c2p = pipe_c2p[0];
+			// close(pipe_p2c[0]);
+			// close(pipe_c2p[1]);
+		}
+
+	public:
+
+		FFProbeDigest () {
+			reset();
+		}
+
+		int reset () {
+			_output = "";
+			int pipe_p2c[2];
+			int pipe_c2p[2];
+			// if (pipe(pipe_p2c) < 0) {
+			// 	throw system_error("unable to create pipe for parent -> child");
+			// }
+			// if (pipe(pipe_c2p) < 0) {
+			// 	throw system_error("unable to create pipe for child -> parent");
+			// }
+
+			_pid = fork();
+			if (_pid == 0) {
+				// child
+				create_child(pipe_p2c, pipe_c2p);
+			} else if (_pid > 0) {
+				// parent
+				create_parent(pipe_p2c, pipe_c2p);
+			} else {
+				// unable to fork
+			}
+			return 0;
+		}
+
+		int update (const void *buffer, size_t size) {
+			// static int update_count = 0;
+			// std::cerr << "update " << (++update_count) << std::endl;
+			// size_t count = write(_fd_p2c, buffer, size);
+			// if (count != size) {
+			// 	std::cerr << "ERROR" << std::endl;
+			// 	return 1;
+			// }
+			return 0;
+		}
+
+		std::string finalize () {
+			std::cerr << "finalize" << std::endl;
+			// close(_fd_p2c);
+			// close(_fd_p2c);
+			waitpid(_pid, nullptr, 0);
+			// size_t size = 0;
+			// while ((size = read(_fd_c2p, _buf_c2p, sizeof(_buf_c2p))) > 0) {
+			// 	_output += _buf_c2p;
+			// }
+			_output += "FFProbeDigest";
+			return _output;
+		}
+};
+*/
+
+
 OpenSSLDigest<size_t,1>*
 build_digest_none () {
 	static auto none_Init = [] (size_t*) { return 0; };
@@ -294,6 +389,11 @@ build_digest_xxh () {
 	return new XXDigest;
 }
 
+// FFProbeDigest*
+// build_digest_ffprobe () {
+// 	return new FFProbeDigest;
+// }
+
 AbstractDigest* build_digest (std::string name) {
 	if (name == "none") {
 		return build_digest_none();
@@ -319,6 +419,8 @@ AbstractDigest* build_digest (std::string name) {
 		return build_digest_ripemd160();
 	} else if (name == "xxh") {
 		return build_digest_xxh();
+	// } else if (name == "ffprobe") {
+	// 	return build_digest_ffprobe();
 	} else {
 		return build_digest_none();
 	}
@@ -334,44 +436,6 @@ size_t decode (const char *str, int radix) {
 	}
 	return num;
 }
-
-
-class malformed_tar_error : public std::exception {
-
-	private:
-
-		std::string _msg;
-
-	public:
-
-		malformed_tar_error (const std::string str) : _msg() {
-			_msg = "malformed_tar_error: ";
-			_msg += str;
-		}
-
-		const char* what () const noexcept {
-			return _msg.c_str();
-		}
-};
-
-
-class passthrough_error : public std::exception {
-
-	private:
-
-		std::string _msg;
-
-	public:
-
-		passthrough_error (const std::string str) : _msg() {
-			_msg = "passthrough_error: ";
-			_msg += str;
-		}
-
-		const char* what () const noexcept {
-			return _msg.c_str();
-		}
-};
 
 
 const size_t RECORD_SIZE = 512;
