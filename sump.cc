@@ -21,7 +21,7 @@ using namespace std;
 
 vector<string> multi_digest (FILE *infile,
                              FILE *outfile,
-                             const vector<AbstractDigest*>& digests) {
+                             vector<Digest>& digests) {
 	assert(infile != nullptr);
 	assert(outfile != nullptr);
 	if (digests.size() > 0) {
@@ -34,35 +34,23 @@ vector<string> multi_digest (FILE *infile,
 			if (digests.size() > 1) {
 				#pragma omp parallel for
 				for (unsigned k = 0; k < digests.size(); ++k) {
-					digests[k]->update(buffer, count);
+					digests[k].update(buffer, count);
 				}
 			} else {
-				digests[0]->update(buffer, count);
+				digests[0].update(buffer, count);
 			}
 		}
 	}
 	vector<string> outputs(digests.size());
 	for (unsigned k = 0; k < digests.size(); ++k) {
-		outputs[k] = digests[k]->finalize();
+		outputs[k] = digests[k].finalize();
 	}
 	return outputs;
 }
 
 int main (int argc, char *argv[]) {
-	map<string,AbstractDigest*> digest_map;
-	digest_map["none"] = build_digest_none();
-	digest_map["count"] = build_digest_count();
-	digest_map["md4"] = build_digest_md4();
-	digest_map["md5"] = build_digest_md5();
-	digest_map["sha1"] = build_digest_sha1();
-	digest_map["sha224"] = build_digest_sha224();
-	digest_map["sha256"] = build_digest_sha256();
-	digest_map["sha384"] = build_digest_sha384();
-	digest_map["sha512"] = build_digest_sha512();
-	digest_map["whirlpool"] = build_digest_whirlpool();
-	digest_map["ripemd160"] = build_digest_ripemd160();
 	vector<string> algs;
-	vector<AbstractDigest*> digests;
+	vector<Digest> digests;
 	FILE* infile;
 	FILE* outfile;
 	FILE* sumfile;
@@ -90,17 +78,8 @@ int main (int argc, char *argv[]) {
 			} else if (!strcmp("-s", argv[k])) {
 				is_sumfile = true;
 			} else if (k > 0) {
-				string alg = argv[k];
-				try {
-					AbstractDigest* digest = digest_map.at(alg);
-					auto pred = [digest] (AbstractDigest* other) -> bool {
-						return digest == other;
-					};
-					if (!any_of(begin(digests), end(digests), pred)) {
-						algs.push_back(alg);
-						digests.push_back(digest);
-					}
-				} catch (out_of_range oor) {}
+				algs.push_back(argv[k]);
+				digests.push_back(build_digest(argv[k]));
 			}
 		}
 	}
@@ -139,9 +118,6 @@ int main (int argc, char *argv[]) {
 		}
 	} else {
 		fprintf(sumfile, "%s  %s\n", sums[0].c_str(), infile_name.c_str());
-	}
-	for (auto const& p : digest_map) {
-		delete p.second;
 	}
 	return 0;
 }
