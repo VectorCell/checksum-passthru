@@ -9,10 +9,8 @@ addons:
     packages:
     - gcc-5
     - g++-5
-    - clang-5.0
     - libssl-dev
     - wamerican
 script:
    - make test
    - make test CC=gcc-5 CXX=g++-5
-   - make test CC=clang CXX=clang++
