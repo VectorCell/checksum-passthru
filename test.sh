@@ -68,8 +68,8 @@ done
 
 HASHES="none count md4 md5 sha1 sha224 sha256 sha384 sha512 whirlpool ripemd160 xxh"
 DIR=$(pwd)
-cd /usr
+cd /usr/share
 for HASH in $(echo $HASHES | tr ' ' '\n'); do
 	printf "\n$HASH\n"
-	tar -c bin | time "$DIR/sump-tar" $HASH > /dev/null
+	tar -c dict | "$DIR/sump-tar" $HASH | "$DIR/sump" $HASH > /dev/null
 done
