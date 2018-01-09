@@ -4,15 +4,17 @@
 
 #pragma once
 
-#include <cstdio>
+#include <iostream>
 #include <string>
 #include <sstream>
+#include <iomanip>
 #include <vector>
 #include <map>
 #include <functional>
 #include <algorithm>
 #include <exception>
 
+#include <cstdio>
 #include <cassert>
 
 #include "xxhash.h"
@@ -191,7 +193,8 @@ class XXDigest : public AbstractDigest {
 		std::string finalize () {
 			uint64_t result = XXH64_digest(_state);
 			std::stringstream ss;
-			ss << std::hex;
+			ss << std::internal << std::hex;
+			ss << std::setfill('0') << std::setw(2 * sizeof(uint64_t));
 			ss << result;
 			return ss.str();
 		}
