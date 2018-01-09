@@ -55,18 +55,19 @@ tar_digest (FILE *infile,
 		} else if (header->checkChecksum()) {
 
 			// metadata
+			type = header->typeFlag;
 			if (long_filename) {
 				long_filename = false;
 			} else {
 				filename = header->getFilename();
 			}
-			size = header->getFileSize();
-			type = header->typeFlag;
-
 			if (debug) {
 				err << endl;
 				err << "HEADER FOUND: type " << type << endl;
 				err << "filename: " << filename << endl;
+			}
+			size = header->getFileSize();
+			if (debug) {
 				err << "size:     " << size << endl;
 			}
 
@@ -138,7 +139,12 @@ int run_diagnostic_mode (int argc, char *argv[]) {
 	}
 	Digest digest = build_digest(alg);
 	try {
-		vector<pair<string,string>> sums = tar_digest(stdin, nullptr, digest, true);
+		FILE *infile = stdin;
+		FILE *outfile = stdout;
+		if (isatty(fileno(outfile))) {
+			outfile = nullptr;
+		}
+		vector<pair<string,string>> sums = tar_digest(infile, outfile, digest, true);
 		sort(begin(sums), end(sums), filename_digest_comparator);
 		for (const auto& p : sums) {
 			cout << p.second << "  " << p.first << endl;

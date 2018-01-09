@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <exception>
 
+#include <cassert>
+
 #include <openssl/md4.h>
 #include <openssl/md5.h>
 #include <openssl/ripemd.h>
@@ -287,58 +289,95 @@ size_t decode (const char *str, int radix) {
 }
 
 
+class malformed_tar_error : public std::exception {
+
+	private:
+
+		std::string _msg;
+
+	public:
+
+		malformed_tar_error (const std::string str) : _msg() {
+			_msg = "malformed_tar_error: ";
+			_msg += str;
+		}
+
+		const char* what () const noexcept {
+			return _msg.c_str();
+		}
+};
+
+
+class passthrough_error : public std::exception {
+
+	private:
+
+		std::string _msg;
+
+	public:
+
+		passthrough_error (const std::string str) : _msg() {
+			_msg = "passthrough_error: ";
+			_msg += str;
+		}
+
+		const char* what () const noexcept {
+			return _msg.c_str();
+		}
+};
+
+
 const size_t RECORD_SIZE = 512;
-const size_t RECORDS_PER_READ = 8;
-typedef struct tar_posix_header
-{                       /* byte offset */
-	char name[100];     /*   0 */
-	char mode[8];       /* 100 */
-	char uid[8];        /* 108 */
-	char gid[8];        /* 116 */
-	char size[12];      /* 124 */
-	char mtime[12];     /* 136 */
-	char chksum[8];     /* 148 */
-	char typeflag;      /* 156 */
-	char linkname[100]; /* 157 */
-	char magic[6];      /* 257 */
-	char version[2];    /* 263 */
-	char uname[32];     /* 265 */
-	char gname[32];     /* 297 */
-	char devmajor[8];   /* 329 */
-	char devminor[8];   /* 337 */
-	char prefix[155];   /* 345 */
-						/* 500 */
-} tar_posix_header;
 
 
 struct TARFileHeader {
 
-	char filename[100]; //NUL-terminated
+	char filename[100];
 	char mode[8];
 	char uid[8];
 	char gid[8];
 	char fileSize[12];
 	char lastModification[12];
 	char checksum[8];
-	char typeFlag; //Also called link indicator for none-UStar format
+	char typeFlag;
 	char linkedFileName[100];
 
-	//USTar-specific fields -- NUL-filled in non-USTAR version
-	char ustarIndicator[6]; //"ustar" -- 6th character might be NUL but results show it doesn't have to
-	char ustarVersion[2]; //00
+	// USTar-specific fields -- NUL-filled in non-USTAR version
+	char ustarIndicator[6];
+	char ustarVersion[2];
 	char ownerUserName[32];
 	char ownerGroupName[32];
 	char deviceMajorNumber[8];
 	char deviceMinorNumber[8];
 	char filenamePrefix[155];
-	char padding[12]; //Nothing of interest, but relevant for checksum
+	char padding[12];
 
 	bool isUSTAR () const {
 		return (memcmp("ustar", ustarIndicator, 5) == 0);
 	}
 
 	size_t getFileSize () const {
-		return decode(fileSize, 8);
+		if (fileSize[0] >= '0' && fileSize[0] <= '9') {
+			return decode(fileSize, 8);
+
+		} else if (fileSize[0] == '\xff') {
+			throw malformed_tar_error("using prefix 0xff (not implemented)");
+
+		} else if (fileSize[0] == '\x80') {
+			size_t size = 0;
+			for (unsigned k = 1; k < sizeof(fileSize); ++k) {
+				size *= 256;
+				size += ((int)fileSize[k]) & 0xff;
+			}
+			return size;
+
+		} else {
+			std::stringstream ss;
+			ss << "unrecognized encoding for file size: ";
+			ss << std::hex;
+			ss << (((int)fileSize[0]) & 0xff);
+			throw malformed_tar_error(ss.str());
+		}
 	}
 
 	std::string getFilename () const {
@@ -370,44 +409,6 @@ struct TARFileHeader {
 	bool checkChecksum () const {
 		return const_cast<TARFileHeader*>(this)->checkChecksum();
 	}
-};
-
-
-class malformed_tar_error : public std::exception {
-
-	private:
-
-		std::string _msg;
-
-	public:
-
-		malformed_tar_error (const char *str) : _msg() {
-			_msg = "malformed_tar_error: ";
-			_msg += str;
-		}
-
-		const char* what () const noexcept {
-			return _msg.c_str();
-		}
-};
-
-
-class passthrough_error : public std::exception {
-
-	private:
-
-		std::string _msg;
-
-	public:
-
-		passthrough_error (const char *str) : _msg() {
-			_msg = "passthrough_error: ";
-			_msg += str;
-		}
-
-		const char* what () const noexcept {
-			return _msg.c_str();
-		}
 };
 
 
