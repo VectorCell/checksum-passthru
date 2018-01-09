@@ -28,19 +28,15 @@ tar_digest (FILE *infile,
 		err << "beginning tar_digest" << endl;
 	}
 
-	vector<pair<string,string>> output;
-	char buf[RECORD_SIZE];
-	TARFileHeader * const header = reinterpret_cast<TARFileHeader*>(&buf[0]);
+	TARFileReader reader(infile, outfile);
+	const char *buf;
 
-	assert(sizeof(TARFileHeader) == RECORD_SIZE);
-	char zeroblock[RECORD_SIZE];
-	memset(zeroblock, 0, RECORD_SIZE);
+	vector<pair<string,string>> output;
 
 	string filename;
 	bool long_filename = false;
 	size_t size = 0;
 	char type = '\0';
-	size_t count = 0;
 	size_t record_num = 0;
 	while (true) {
 
@@ -48,19 +44,15 @@ tar_digest (FILE *infile,
 			//err << endl << "RECORD " << record_num << endl;
 		}
 
-		count = tar_record_read(buf, infile, outfile);
-		if (count < RECORD_SIZE) {
+		buf = reader.fetch_record();
+		const TARFileHeader *header = reinterpret_cast<const TARFileHeader *>(buf);
+		
+		if (buf == nullptr) {
 			if (debug) {
-				if (count != 0) {
-					err << "ERROR: unable to read complete record" << endl;
-				} else {
-					err << "reached end of input" << endl;
-				}
+				err << "reached end of input" << endl;
 			}
 			break;
-		}
-
-		if (header->checkChecksum()) {
+		} else if (header->checkChecksum()) {
 
 			// metadata
 			if (long_filename) {
@@ -90,7 +82,8 @@ tar_digest (FILE *infile,
 				digest.reset();
 				while (size > 0) {
 					size_t bytes_read = min(size, RECORD_SIZE);
-					count = tar_record_read(buf, infile, outfile);
+					// count = tar_record_read(buf, infile, outfile);
+					buf = reader.fetch_record();
 					size -= bytes_read;
 					if (debug) {
 						--n_records;
@@ -112,7 +105,8 @@ tar_digest (FILE *infile,
 				long_filename = true;
 				filename = "";
 				while (size > 0) {
-					count = tar_record_read(buf, infile, outfile);
+					// count = tar_record_read(buf, infile, outfile);
+					buf = reader.fetch_record();
 					filename += string(buf, min(size, RECORD_SIZE));
 					size -= min(size, RECORD_SIZE);
 				}
@@ -163,7 +157,12 @@ int run_normal_mode (int argc, char *argv[]) {
 	}
 	Digest digest = build_digest(alg);
 	try {
-		vector<pair<string,string>> sums = tar_digest(stdin, stdout, digest);
+		FILE *infile = stdin;
+		FILE *outfile = stdout;
+		if (isatty(fileno(outfile))) {
+			outfile = nullptr;
+		}
+		vector<pair<string,string>> sums = tar_digest(infile, outfile, digest);
 		sort(begin(sums), end(sums), filename_digest_comparator);
 		for (const auto& p : sums) {
 			cerr << p.second << "  " << p.first << "\n";
@@ -176,6 +175,6 @@ int run_normal_mode (int argc, char *argv[]) {
 }
 
 int main (int argc, char *argv[]) {
-	//return run_normal_mode(argc, argv);
-	return run_diagnostic_mode(argc, argv);
+	return run_normal_mode(argc, argv);
+	// return run_diagnostic_mode(argc, argv);
 }

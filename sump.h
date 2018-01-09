@@ -276,7 +276,7 @@ AbstractDigest* build_digest (std::string name) {
 }
 
 
-size_t decode (char *str, int radix) {
+size_t decode (const char *str, int radix) {
 	size_t num = 0;
 	while (*str != '\0') {
 		num *= radix;
@@ -333,15 +333,15 @@ struct TARFileHeader {
 	char filenamePrefix[155];
 	char padding[12]; //Nothing of interest, but relevant for checksum
 
-	bool isUSTAR () {
+	bool isUSTAR () const {
 		return (memcmp("ustar", ustarIndicator, 5) == 0);
 	}
 
-	size_t getFileSize () {
+	size_t getFileSize () const {
 		return decode(fileSize, 8);
 	}
 
-	std::string getFilename () {
+	std::string getFilename () const {
 		std::string name(
 			filename,
 			std::min(static_cast<size_t>(100), strlen(filename)));
@@ -365,6 +365,10 @@ struct TARFileHeader {
 		memcpy(checksum, orig, sizeof(checksum));
 		size_t ref = decode(orig, 8);
 		return (ref == usum || ref == ssum);
+	}
+
+	bool checkChecksum () const {
+		return const_cast<TARFileHeader*>(this)->checkChecksum();
 	}
 };
 
@@ -415,21 +419,71 @@ bool filename_digest_comparator (std::pair<std::string,std::string> a,
 		b.first.begin(), b.first.end());
 }
 
-size_t tar_record_read (char *buf, FILE *f) {
-	return fread(buf, 1, RECORD_SIZE, f);
-}
+// size_t tar_record_read (char *buf, FILE *f) {
+// 	return fread(buf, 1, RECORD_SIZE, f);
+// }
 
-size_t tar_record_write (char *buf, FILE *f) {
-	return fwrite(buf, 1, RECORD_SIZE, f);
-}
+// size_t tar_record_write (char *buf, FILE *f) {
+// 	return fwrite(buf, 1, RECORD_SIZE, f);
+// }
 
-size_t tar_record_read (char* buf, FILE *in, FILE *out) {
-	size_t count_in = tar_record_read(buf, in);
-	if (out != nullptr && count_in != 0) {
-		size_t count_out = tar_record_write(buf, out);
-		if (count_in != count_out) {
-			throw passthrough_error("count_in != count_out");
+// size_t tar_record_read (char* buf, FILE *in, FILE *out) {
+// 	size_t count_in = tar_record_read(buf, in);
+// 	if (out != nullptr && count_in != 0) {
+// 		size_t count_out = tar_record_write(buf, out);
+// 		if (count_in != count_out) {
+// 			throw passthrough_error("count_in != count_out");
+// 		}
+// 	}
+// 	return count_in;
+// }
+
+
+class TARFileReader {
+
+	private:
+
+		FILE *_if;
+		FILE *_of;
+		char *_buffer;
+		size_t _pos;
+		size_t _n_bytes;
+
+		void fill_buffer () {
+			_n_bytes = fread(_buffer, 1, BUFFER_SIZE, _if);
+			if (_of != nullptr) {
+				fwrite(_buffer, 1, _n_bytes, _of);
+			}
+			_pos = 0;
 		}
-	}
-	return count_in;
-}
+
+	public:
+
+		TARFileReader (FILE *infile = stdin, FILE *outfile = stdout) :
+			_if(infile),
+			_of(outfile),
+			_buffer(new char[BUFFER_SIZE]),
+			_pos(0),
+			_n_bytes(0) {}
+
+		TARFileReader (const TARFileReader&) = delete;
+		TARFileReader (TARFileReader&&) = delete;
+		TARFileReader& operator = (const TARFileReader&) = delete;
+
+		~TARFileReader () {
+			delete [] _buffer;
+		}
+
+		const char * fetch_record () {
+			if (_n_bytes == 0 || _pos == BUFFER_SIZE) {
+				fill_buffer();
+				if (_n_bytes == 0) {
+					return nullptr;
+				}
+			}
+			const char *ptr = _buffer + _pos;
+			_n_bytes -= RECORD_SIZE;
+			_pos += RECORD_SIZE;
+			return ptr;
+		}
+};

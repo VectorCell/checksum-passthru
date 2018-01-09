@@ -76,22 +76,33 @@ if [ ! -f test.tar ]; then
 		echo "hello world" > test/text1.txt
 		echo "this is the second file" > test/text2.txt
 		dd if=/dev/zero of=test/zeroes1.file bs=4k count=0 seek=4k
+		mkdir test/films
+		dd if=/dev/zero of=test/films/fake.mkv bs=1 count=0 seek=258374273
+		# dd if=/dev/zero of="test/films/Star.Wars.Episode.II.Attack.of.the.Clones.2002.Blu-ray.Remux.1080p.AVC.DTS-HD.MA.6.1-HDRemuX.mkv" bs=1 count=0 seek=36281333103
+		# dd if=/dev/zero of="test/films/Star.Wars.Episode.III.Revenge.of.the.Sith.2005.Blu-ray.Remux.1080p.AVC.DTS-HD.MA.6.1-HDRemuX.mkv" bs=1 count=0 seek=36588542602
+		# dd if=/dev/zero of="test/films/Star.Wars.Episode.I.The.Phantom.Menace.1999.Blu-ray.Remux.1080p.AVC.DTS-HD.MA.6.1-HDRemuX.mkv" bs=1 count=0 seek=36606908124
+		# dd if=/dev/zero of="test/films/Star.Wars.Episode.IV.A.New.Hope.1977.Blu-ray.Remux.1080p.AVC.DTS-HD.MA.6.1-HDRemuX.mkv" bs=1 count=0 seek=35657974339
+		# dd if=/dev/zero of="test/films/Star.Wars.Episode.VI.Return.of.the.Jedi.1983.Blu-ray.Remux.1080p.AVC.DTS-HD.MA.6.1-HDRemuX.mkv" bs=1 count=0 seek=36090294018
+		# dd if=/dev/zero of="test/films/Star.Wars.Episode.V.The.Empire.Strikes.Back.1980.Blu-ray.Remux.1080p.AVC.DTS-HD.MA.6.1-HDRemuX.mkv" bs=1 count=0 seek=35885186582
+		# dd if=/dev/zero of="test/films/Star.Wars.The.Complete.Saga.1977-2005.Blu-ray.Remux.1080p.AVC.DTS-HD.MA.6.1-HDRemuX.nfo" bs=1 count=0 seek=77918
 	fi
-	# tarpv test | output-sparse test.tar
-	tar -c test > test.tar
+	tar -c test | pv -Ws $(du -bd 0 test | awk '{print $1}') | output-sparse test.tar
+	# tar -c test > test.tar
 fi
 
-echo "sump md5 vs md5sum:"
-md5sum test.tar
-./sump md5 < test.tar > /dev/null
-echo
+# echo "sump md5 vs md5sum:"
+# md5sum test.tar
+# ./sump md5 < test.tar > /dev/null
+# echo
 
-echo "output of sump-tar md5:"
+# echo "output of sump-tar md5:"
+# ./sump-tar md5 < test.tar > /dev/null
+# echo
+
+# echo "comparison of input and output of sump-tar md5:"
+# ./sump md5 < test.tar | ./sump-tar md5 2> /dev/null | ./sump md5 > /dev/null
+# echo
+
 ./sump-tar md5 < test.tar > /dev/null
-echo
 
-echo "comparison of input and output of sump-tar md5:"
-./sump md5 < test.tar | ./sump-tar md5 2> /dev/null | ./sump md5 > /dev/null
-echo
-
-rm -f test.tar
+# rm -f test.tar
