@@ -12,10 +12,19 @@
 #include <cstring>
 #include <cassert>
 #include <cctype>
+#include <csignal>
 
 #include "sump.h"
 
+
 using namespace std;
+
+
+void signal_handler (int sig) {
+	if (sig == SIGPIPE) {
+		// do nothing
+	}
+}
 
 vector<pair<string,string>>
 tar_digest (FILE *infile,
@@ -26,6 +35,10 @@ tar_digest (FILE *infile,
 
 	if (debug) {
 		err << "beginning tar_digest" << endl;
+	}
+
+	if (digest.is_program_digest()) {
+		signal(SIGPIPE, signal_handler);
 	}
 
 	TARFileReader reader(infile, outfile);
@@ -74,24 +87,12 @@ tar_digest (FILE *infile,
 			if (type == '\0' || type == '0') {
 				// regular file
 
-				size_t n_records = (size / RECORD_SIZE) + (size % RECORD_SIZE == 0 ? 0 : 1);
-				if (debug) {
-					err << "total record count for file data: " << n_records << endl;
-				}
-
 				// reads file
 				digest.reset();
 				while (size > 0) {
 					size_t bytes_read = min(size, RECORD_SIZE);
-					// count = tar_record_read(buf, infile, outfile);
 					buf = reader.fetch_record();
 					size -= bytes_read;
-					if (debug) {
-						--n_records;
-						if (!(n_records & 0xffffff)) {
-							err << "records left: " << n_records << "\n";
-						}
-					}
 					digest.update(buf, bytes_read);
 				}
 				if (debug) {
@@ -171,7 +172,7 @@ int run_normal_mode (int argc, char *argv[]) {
 		vector<pair<string,string>> sums = tar_digest(infile, outfile, digest);
 		sort(begin(sums), end(sums), filename_digest_comparator);
 		for (const auto& p : sums) {
-			cerr << p.second << "  " << p.first << "\n";
+			cerr << digest.format(p.first, p.second) << "\n";
 		}
 		return 0;
 	} catch (malformed_tar_error mte) {

@@ -52,7 +52,18 @@ class AbstractDigest {
 		virtual int reset () = 0;
 		virtual int update (const void *, size_t) = 0;
 		virtual std::string finalize () = 0;
+		virtual std::string format (std::string filename, std::string digest) {
+			return digest + "  " + filename;
+		}
 		virtual ~AbstractDigest () = default;
+};
+
+
+class AbstractProgramDigest : public AbstractDigest {
+	public:
+		std::string format (std::string filename, std::string digest) {
+			return filename + "\n" + digest;
+		}
 };
 
 
@@ -94,6 +105,14 @@ class Digest {
 
 		std::string finalize () {
 			return _p->finalize();
+		}
+
+		std::string format (std::string filename, std::string digest) {
+			return _p->format(filename, digest);
+		}
+
+		bool is_program_digest () {
+			return dynamic_cast<AbstractProgramDigest*>(_p) != nullptr;
 		}
 };
 
@@ -170,7 +189,7 @@ class OpenSSLDigest : public AbstractDigest {
 };
 
 
-class XXDigest : public AbstractDigest {
+class XXHDigest : public AbstractDigest {
 
 	private:
 
@@ -178,10 +197,10 @@ class XXDigest : public AbstractDigest {
 
 	public:
 
-		XXDigest () :
+		XXHDigest () :
 			_state(XXH64_createState()) {}
 
-		~XXDigest () {
+		~XXHDigest () {
 			XXH64_freeState(_state);
 		}
 
@@ -206,94 +225,142 @@ class XXDigest : public AbstractDigest {
 };
 
 
-/*
-class FFProbeDigest : public AbstractDigest {
+class FFProbeDigest : public AbstractProgramDigest {
 
 	private:
 
+		static const int PARENT_WRITE_PIPE = 0;
+		static const int PARENT_READ_PIPE  = 1;
+		static const int READ_FD  = 0;
+		static const int WRITE_FD = 1;
+
 		pid_t _pid;
-		int _fd_p2c, _fd_c2p;
-
-		char _buf_c2p[BUFFER_SIZE];
-
+		int _read_fd, _write_fd;
+		bool _read_fd_open, _write_fd_open;
+		bool _send_data;
+		char _buf[BUFFER_SIZE];
 		std::string _output;
 
-		void create_child (int pipe_p2c[2], int pipe_c2p[2]) {
-			// while ((dup2(pipe_p2c[0], STDIN_FILENO) == -1) && (errno == EINTR)) {}
-			// while ((dup2(pipe_c2p[1], STDERR_FILENO) == -1) && (errno == EINTR)) {}
-			// close(pipe_p2c[1]);
-			// close(pipe_c2p[0]);
+		void create_child (int parent_read_fd,
+		                   int parent_write_fd,
+		                   int child_read_fd,
+		                   int child_write_fd) {
+			char *path = const_cast<char*>("/usr/bin/ffprobe");
+			char *arg1 = const_cast<char*>("-");
+			char *argv[] = {path, arg1, nullptr};
 
-			// call exec
-			char *argv[] = {
-				nullptr
-			};
-			execv("md5sum", argv);
-			exit(1);
+			dup2(child_read_fd, STDIN_FILENO);
+			dup2(child_write_fd, STDERR_FILENO);
+			
+			close(child_read_fd);
+			close(child_write_fd);
+			close(parent_read_fd);
+			close(parent_write_fd);
+
+			_read_fd_open = false;
+			_write_fd_open = false;
+
+			execv(argv[0], argv);
+			exit(EXIT_FAILURE);
 		}
 
-		void create_parent(int pipe_p2c[2], int pipe_c2p[2]) {
-			// _fd_p2c = pipe_p2c[1];
-			// _fd_c2p = pipe_c2p[0];
-			// close(pipe_p2c[0]);
-			// close(pipe_c2p[1]);
+		void create_parent (int parent_read_fd,
+		                    int parent_write_fd,
+		                    int child_read_fd,
+		                    int child_write_fd) {
+			_read_fd = parent_read_fd;
+			_write_fd = parent_write_fd;
+			close(child_read_fd);
+			close(child_write_fd);
+		}
+
+		void fetch_output () {
+			size_t count = 0;
+			while ((count = read(_read_fd, _buf, sizeof(_buf))) > 0) {
+				_output += std::string(_buf, count);
+			}
+		}
+
+		void close_fds () {
+			if (_read_fd_open) {
+				close(_read_fd);
+				_read_fd_open = false;
+			}
+			if (_write_fd_open) {
+				close(_write_fd);
+				_write_fd_open = false;
+			}
 		}
 
 	public:
 
-		FFProbeDigest () {
-			reset();
-		}
+		FFProbeDigest () :
+			_pid(),
+			_read_fd(),
+			_write_fd(),
+			_read_fd_open(false),
+			_write_fd_open(false),
+			_send_data(true),
+			_buf(),
+			_output() {}
 
 		int reset () {
+			close_fds();
+			_send_data = true;
 			_output = "";
-			int pipe_p2c[2];
-			int pipe_c2p[2];
-			// if (pipe(pipe_p2c) < 0) {
-			// 	throw system_error("unable to create pipe for parent -> child");
-			// }
-			// if (pipe(pipe_c2p) < 0) {
-			// 	throw system_error("unable to create pipe for child -> parent");
-			// }
+
+			int pipes[2][2];
+			if (pipe(pipes[PARENT_READ_PIPE]) != 0) {
+				throw system_error("unable to create read pipe");
+			} else {
+				_read_fd_open = true;
+			}
+			if (pipe(pipes[PARENT_WRITE_PIPE]) != 0) {
+				throw system_error("unable to create write pipe");
+			} else {
+				_write_fd_open = true;
+			}
 
 			_pid = fork();
 			if (_pid == 0) {
-				// child
-				create_child(pipe_p2c, pipe_c2p);
+				create_child(pipes[PARENT_READ_PIPE][READ_FD],
+				             pipes[PARENT_WRITE_PIPE][WRITE_FD],
+				             pipes[PARENT_WRITE_PIPE][READ_FD],
+				             pipes[PARENT_READ_PIPE][WRITE_FD]);
 			} else if (_pid > 0) {
-				// parent
-				create_parent(pipe_p2c, pipe_c2p);
+				_read_fd = pipes[PARENT_READ_PIPE][READ_FD];
+				_write_fd = pipes[PARENT_WRITE_PIPE][WRITE_FD];
+				create_parent(pipes[PARENT_READ_PIPE][READ_FD],
+				              pipes[PARENT_WRITE_PIPE][WRITE_FD],
+				              pipes[PARENT_WRITE_PIPE][READ_FD],
+				              pipes[PARENT_READ_PIPE][WRITE_FD]);
 			} else {
-				// unable to fork
+				throw system_error("unable to fork");
 			}
 			return 0;
 		}
 
 		int update (const void *buffer, size_t size) {
-			// static int update_count = 0;
-			// std::cerr << "update " << (++update_count) << std::endl;
-			// size_t count = write(_fd_p2c, buffer, size);
-			// if (count != size) {
-			// 	std::cerr << "ERROR" << std::endl;
-			// 	return 1;
-			// }
+			if (_send_data) {
+				size_t count = write(_write_fd, buffer, size);
+				if (count != size) {
+					_send_data = false;
+				}
+			}
 			return 0;
 		}
 
 		std::string finalize () {
-			std::cerr << "finalize" << std::endl;
-			// close(_fd_p2c);
-			// close(_fd_p2c);
-			waitpid(_pid, nullptr, 0);
-			// size_t size = 0;
-			// while ((size = read(_fd_c2p, _buf_c2p, sizeof(_buf_c2p))) > 0) {
-			// 	_output += _buf_c2p;
-			// }
-			_output += "FFProbeDigest";
+			fetch_output();
+			close_fds();
+			int status = 0;
+			pid_t waited = waitpid(_pid, &status, 0);
+			if (waited != _pid) {
+				throw system_error("wrong child process reaped");
+			}
 			return _output;
 		}
 };
-*/
 
 
 OpenSSLDigest<size_t,1>*
@@ -384,15 +451,15 @@ build_digest_ripemd160 () {
 		RIPEMD160_Final);
 }
 
-XXDigest*
+XXHDigest*
 build_digest_xxh () {
-	return new XXDigest;
+	return new XXHDigest;
 }
 
-// FFProbeDigest*
-// build_digest_ffprobe () {
-// 	return new FFProbeDigest;
-// }
+FFProbeDigest*
+build_digest_ffprobe () {
+	return new FFProbeDigest;
+}
 
 AbstractDigest* build_digest (std::string name) {
 	if (name == "none") {
@@ -419,8 +486,8 @@ AbstractDigest* build_digest (std::string name) {
 		return build_digest_ripemd160();
 	} else if (name == "xxh") {
 		return build_digest_xxh();
-	// } else if (name == "ffprobe") {
-	// 	return build_digest_ffprobe();
+	} else if (name == "ffprobe") {
+		return build_digest_ffprobe();
 	} else {
 		return build_digest_none();
 	}
