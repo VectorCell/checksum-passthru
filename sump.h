@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <errno.h>
 
 #include "xxhash.h"
 #include "sumpexcept.h"
@@ -237,7 +238,8 @@ class FFProbeDigest : public AbstractProgramDigest {
 		pid_t _pid;
 		int _read_fd, _write_fd;
 		bool _read_fd_open, _write_fd_open;
-		bool _send_data;
+		bool _snd_data;
+		bool _rcv_data;
 		char _buf[BUFFER_SIZE];
 		std::string _output;
 
@@ -251,7 +253,7 @@ class FFProbeDigest : public AbstractProgramDigest {
 
 			dup2(child_read_fd, STDIN_FILENO);
 			dup2(child_write_fd, STDERR_FILENO);
-			
+
 			close(child_read_fd);
 			close(child_write_fd);
 			close(parent_read_fd);
@@ -275,9 +277,24 @@ class FFProbeDigest : public AbstractProgramDigest {
 		}
 
 		void fetch_output () {
-			size_t count = 0;
-			while ((count = read(_read_fd, _buf, sizeof(_buf))) > 0) {
-				_output += std::string(_buf, count);
+			if (_rcv_data) {
+				int count = 0;
+				while ((count = read(_read_fd, _buf, sizeof(_buf))) > 0) {
+					if (count > 0) {
+						_output += std::string(_buf, count);
+					}
+				}
+				if (count < 0) {
+					if (errno == EBADF) {
+						// bad file descriptor, pipe is closed
+						_rcv_data = false;
+					} else {
+						std::stringstream ss;
+						ss << "cannot concatenate: count is " << count << std::endl;
+						ss << "errno: " << errno << std::endl;
+						throw system_error(ss.str());
+					}
+				}
 			}
 		}
 
@@ -300,13 +317,15 @@ class FFProbeDigest : public AbstractProgramDigest {
 			_write_fd(),
 			_read_fd_open(false),
 			_write_fd_open(false),
-			_send_data(true),
+			_snd_data(true),
+			_rcv_data(true),
 			_buf(),
 			_output() {}
 
 		int reset () {
 			close_fds();
-			_send_data = true;
+			_snd_data = true;
+			_rcv_data = true;
 			_output = "";
 
 			int pipes[2][2];
@@ -341,23 +360,38 @@ class FFProbeDigest : public AbstractProgramDigest {
 		}
 
 		int update (const void *buffer, size_t size) {
-			if (_send_data) {
+			if (_snd_data) {
 				size_t count = write(_write_fd, buffer, size);
 				if (count != size) {
-					_send_data = false;
+					std::cerr << "fetched output" << std::endl;
+					fetch_output();
+					_snd_data = false;
 				}
 			}
 			return 0;
 		}
 
 		std::string finalize () {
-			fetch_output();
-			close_fds();
+			std::cerr << "called FFProbeDigest::finalize" << std::endl;
+			// fetch_output();
+			// std::cerr << "fetched output" << std::endl;
 			int status = 0;
-			pid_t waited = waitpid(_pid, &status, 0);
-			if (waited != _pid) {
-				throw system_error("wrong child process reaped");
+			// pid_t waited = waitpid(-1, &status, 0);
+			pid_t waited = waitpid(-1, &status, WNOHANG);
+			if (waited == 0) {
+				std::cerr << "child process too slow, need to wait ..." << std::endl;
+				waited = wait(&status);
+				// waited = waitpid(_pid, &status, 0);
+				fetch_output();
 			}
+			close_fds();
+			if (waited != _pid) {
+				std::cerr << "returned pid: " << waited << std::endl;
+			}
+			std::cerr << "done waiting" << std::endl;
+			// if (waited != _pid) {
+			// 	throw system_error("wrong child process reaped");
+			// }
 			return _output;
 		}
 };
@@ -486,8 +520,8 @@ AbstractDigest* build_digest (std::string name) {
 		return build_digest_ripemd160();
 	} else if (name == "xxh") {
 		return build_digest_xxh();
-	} else if (name == "ffprobe") {
-		return build_digest_ffprobe();
+//	} else if (name == "ffprobe") {
+//		return build_digest_ffprobe();
 	} else {
 		return build_digest_none();
 	}

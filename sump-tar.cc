@@ -148,7 +148,7 @@ int run_diagnostic_mode (int argc, char *argv[]) {
 		vector<pair<string,string>> sums = tar_digest(infile, outfile, digest, true);
 		sort(begin(sums), end(sums), filename_digest_comparator);
 		for (const auto& p : sums) {
-			cout << p.second << "  " << p.first << endl;
+			cerr << digest.format(p.first, p.second) << "\n";
 		}
 		return 0;
 	} catch (malformed_tar_error mte) {
@@ -182,6 +182,6 @@ int run_normal_mode (int argc, char *argv[]) {
 }
 
 int main (int argc, char *argv[]) {
-	return run_normal_mode(argc, argv);
-	// return run_diagnostic_mode(argc, argv);
+	// return run_normal_mode(argc, argv);
+	return run_diagnostic_mode(argc, argv);
 }
