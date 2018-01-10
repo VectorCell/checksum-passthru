@@ -182,6 +182,6 @@ int run_normal_mode (int argc, char *argv[]) {
 }
 
 int main (int argc, char *argv[]) {
-	// return run_normal_mode(argc, argv);
-	return run_diagnostic_mode(argc, argv);
+	return run_normal_mode(argc, argv);
+	// return run_diagnostic_mode(argc, argv);
 }
