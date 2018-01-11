@@ -82,11 +82,16 @@ class Digest {
 
 		Digest (const Digest& d) = delete;
 
-		Digest (Digest&& d) {
+		Digest (Digest&& d) : _p(nullptr) {
 			std::swap(_p, d._p);
 		}
 
 		Digest& operator = (const Digest& d) = delete;
+
+		Digest& operator = (Digest&& d) {
+			std::swap(_p, d._p);
+			return *this;
+		}
 
 		bool operator == (const Digest& other) {
 			return _p == other._p;
@@ -496,9 +501,7 @@ build_digest_ffprobe () {
 }
 
 AbstractDigest* build_digest (std::string name) {
-	if (name == "none") {
-		return build_digest_none();
-	} else if (name == "count") {
+	if (name == "count") {
 		return build_digest_count();
 	} else if (name == "md4") {
 		return build_digest_md4();

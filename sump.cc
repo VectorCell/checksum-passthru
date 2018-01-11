@@ -23,7 +23,6 @@ vector<string> multi_digest (FILE *infile,
                              FILE *outfile,
                              vector<Digest>& digests) {
 	assert(infile != nullptr);
-	assert(outfile != nullptr);
 	if (digests.size() > 0) {
 		unsigned char buffer[BUFFER_SIZE];
 		size_t count = 0;
@@ -92,9 +91,7 @@ int main (int argc, char *argv[]) {
 
 	if (outfile_name == "-") {
 		if (isatty(fileno(stdout))) {
-			outfile = NULL;
-			fprintf(stderr, "ERROR: cannot output stream data to TTY.\n");
-			return 1;
+			outfile = nullptr;
 		} else {
 			outfile = stdout;
 		}
@@ -107,7 +104,6 @@ int main (int argc, char *argv[]) {
 	} else {
 		sumfile = fopen(sumfile_name.c_str(), "w");
 	}
-
 	vector<string> sums = multi_digest(infile, outfile, digests);
 	if (sums.size() > 1) {
 		for (unsigned k = 0; k < algs.size(); ++k) {
