@@ -104,6 +104,11 @@ int main (int argc, char *argv[]) {
 	} else {
 		sumfile = fopen(sumfile_name.c_str(), "w");
 	}
+
+	if (digests.size() == 0) {
+		digests.push_back(build_digest_default());
+	}
+
 	vector<string> sums = multi_digest(infile, outfile, digests);
 	if (sums.size() > 1) {
 		for (unsigned k = 0; k < algs.size(); ++k) {

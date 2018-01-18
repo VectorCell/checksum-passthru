@@ -93,6 +93,12 @@ class Digest {
 			return *this;
 		}
 
+		Digest& operator = (AbstractDigest *p) {
+			std::swap(p, _p);
+			delete p;
+			return *this;
+		}
+
 		bool operator == (const Digest& other) {
 			return _p == other._p;
 		}
@@ -500,8 +506,15 @@ build_digest_ffprobe () {
 	return new FFProbeDigest;
 }
 
+AbstractDigest*
+build_digest_default () {
+	return build_digest_xxh();
+}
+
 AbstractDigest* build_digest (std::string name) {
-	if (name == "count") {
+	if (name == "none") {
+		return build_digest_none();
+	} else if (name == "count") {
 		return build_digest_count();
 	} else if (name == "md4") {
 		return build_digest_md4();
@@ -523,6 +536,8 @@ AbstractDigest* build_digest (std::string name) {
 		return build_digest_ripemd160();
 	} else if (name == "xxh") {
 		return build_digest_xxh();
+	} else if (name == "") {
+		return build_digest_default();
 //	} else if (name == "ffprobe") {
 //		return build_digest_ffprobe();
 	} else {
