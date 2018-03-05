@@ -48,6 +48,16 @@ template <typename DS = size_t>
 using fn_final = std::function<int(unsigned char*, DS*)>;
 
 
+template <typename T>
+std::string get_hex_repr(T val) {
+	std::stringstream ss;
+	ss << std::internal << std::hex;
+	ss << std::setfill('0') << std::setw(2 * sizeof(val));
+	ss << val;
+	return ss.str();
+}
+
+
 class AbstractDigest {
 	public:
 		virtual int reset () = 0;
@@ -228,11 +238,12 @@ class XXHDigest : public AbstractDigest {
 
 		std::string finalize () {
 			uint64_t result = XXH64_digest(_state);
-			std::stringstream ss;
-			ss << std::internal << std::hex;
-			ss << std::setfill('0') << std::setw(2 * sizeof(uint64_t));
-			ss << result;
-			return ss.str();
+			// std::stringstream ss;
+			// ss << std::internal << std::hex;
+			// ss << std::setfill('0') << std::setw(2 * sizeof(result));
+			// ss << result;
+			// return ss.str();
+			return get_hex_repr(result);
 		}
 };
 
