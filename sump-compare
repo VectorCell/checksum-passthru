@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+
+import sys
+
+def fetch_filenames():
+	filenames = []
+	for arg in sys.argv[1:]:
+		filenames.append(arg)
+	if len(filenames) != 2:
+		print("ERROR: currently only comparisons of two files are supported")
+		sys.exit(1)
+	return filenames
+
+def fetch_contents(filenames):
+	# contents = {}
+	# for filename in filenames:
+	# 	contents[filename] = {}
+	# 	with open(filename) as file:
+	# 		for line in file:
+	# 			line = line.strip()
+	# 			tokens = line.split("  ", maxsplit=2)
+	# 			contents[filename][tokens[1]] = tokens[0]
+	# return contents
+	data = {}
+	for filename in filenames:
+		with open(filename) as file:
+			for line in file:
+				line = line.strip()
+				tokens = line.split("  ", maxsplit=2)
+				if tokens[1] not in data:
+					data[tokens[1]] = [tokens[0]]
+				else:
+					data[tokens[1]].append(tokens[0])
+	return data
+
+def main():
+	filenames = fetch_filenames()
+	data = fetch_contents(filenames)
+
+	short = []
+	equal = []
+	unequal = []
+
+	for filename in data:
+		sums = data[filename]
+		if len(sums) != len(filenames):
+			short.append(filename)
+		elif len(sums) == sums.count(sums[0]):
+			equal.append(filename)
+		else:
+			unequal.append(filename)
+
+	# if equal:
+	# 	print("these files have sums that match")
+	# 	for filename in equal:
+	# 		print(filename)
+	# 	print()
+
+	if short:
+		print("not enough sums found for these files:")
+		for filename in short:
+			print(filename)
+		print()
+
+	if unequal:
+		print("sum mismatch found for these files:")
+		for filename in unequal:
+			print(filename)
+		print()
+
+	print("There were {} files analyzed from {} sources.".format(len(data), len(filenames)))
+	print("There were {} files that had matching sums.".format(len(equal)))
+	print("There were {} files with not enough sums found.".format(len(short)))
+	print("There were {} files that had mismatched sums.".format(len(unequal)))
+
+	if len(equal) != len(data):
+		sys.exit(1)
+
+if __name__ == "__main__":
+	main()
