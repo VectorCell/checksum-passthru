@@ -10,8 +10,8 @@ ifeq "$(CXX)" "g++"
 	endif
 endif
 
-CFLAGS   := -pedantic -std=$(CSTD) -Wall -Werror -O3
-CPPFLAGS := -pedantic -std=$(CPPSTD) -Wall -Werror -O3
+CFLAGS   := -pedantic -std=$(CSTD) -Wall -O3
+CPPFLAGS := -pedantic -std=$(CPPSTD) -Wall -O3
 LIBFLAGS := -lcrypto -lssl -fopenmp
 
 all : sump sump-tar md5sump sha1sump sha224sump sha256sump sha384sump sha512sump xxhsump
