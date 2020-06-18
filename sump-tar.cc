@@ -158,21 +158,29 @@ int run_diagnostic_mode (int argc, char *argv[]) {
 }
 
 int run_normal_mode (int argc, char *argv[]) {
+	bool sums_only = false;
 	string alg;
 	for (int k = 1; k < argc; ++k) {
-		alg = argv[k];
+		string arg = argv[k];
+		if (arg == "--sumsonly")
+			sums_only = true;
+		else
+			alg = arg;
 	}
 	Digest digest = build_digest(alg);
 	try {
 		FILE *infile = stdin;
 		FILE *outfile = stdout;
-		if (isatty(fileno(outfile))) {
+		if (sums_only || isatty(fileno(outfile))) {
 			outfile = nullptr;
 		}
 		vector<pair<string,string>> sums = tar_digest(infile, outfile, digest);
 		sort(begin(sums), end(sums), filename_digest_comparator);
 		for (const auto& p : sums) {
-			cerr << digest.format(p.first, p.second) << "\n";
+			if (sums_only)
+				cout << digest.format(p.first, p.second) << "\n";
+			else
+				cerr << digest.format(p.first, p.second) << "\n";
 		}
 		return 0;
 	} catch (malformed_tar_error mte) {
