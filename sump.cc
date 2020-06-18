@@ -59,6 +59,7 @@ int main (int argc, char *argv[]) {
 	bool is_infile = false;
 	bool is_outfile = false;
 	bool is_sumfile = false;
+	bool sums_only = false;
 	for (int k = 0; k < argc; ++k) {
 		if (is_infile) {
 			is_infile = false;
@@ -76,6 +77,8 @@ int main (int argc, char *argv[]) {
 				is_outfile = true;
 			} else if (!strcmp("-s", argv[k])) {
 				is_sumfile = true;
+			} else if (!strcmp("--sumsonly", argv[k])) {
+				sums_only = true;
 			} else if (k > 0) {
 				algs.push_back(argv[k]);
 				digests.push_back(build_digest(argv[k]));
@@ -89,20 +92,25 @@ int main (int argc, char *argv[]) {
 		infile = fopen(infile_name.c_str(), "r");
 	}
 
-	if (outfile_name == "-") {
-		if (isatty(fileno(stdout))) {
-			outfile = nullptr;
+	if (sums_only) {
+		outfile = nullptr;
+		sumfile = stdout;
+	} else {
+		if (outfile_name == "-") {
+			if (isatty(fileno(stdout))) {
+				outfile = nullptr;
+			} else {
+				outfile = stdout;
+			}
 		} else {
-			outfile = stdout;
+			outfile = fopen(outfile_name.c_str(), "w");
 		}
-	} else {
-		outfile = fopen(outfile_name.c_str(), "w");
-	}
 
-	if (sumfile_name == "-") {
-		sumfile = stderr;
-	} else {
-		sumfile = fopen(sumfile_name.c_str(), "w");
+		if (sumfile_name == "-") {
+			sumfile = stderr;
+		} else {
+			sumfile = fopen(sumfile_name.c_str(), "w");
+		}
 	}
 
 	if (digests.size() == 0) {

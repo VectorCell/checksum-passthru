@@ -8,7 +8,7 @@ Use the same way you'd use md5sum-type programs without arguments (getting data 
 
 For example, you could use it to verify a file as it's being downloaded:
 ```
-curl http://url/image.iso | md5pass > image.iso 2> image.iso.md5
+curl http://url/image.iso | sump md5 > image.iso 2> image.iso.md5
 ```
 
 As a side note, performance seems to be superior to corresponding md5sum-type programs for large data streams (in some cases, substantially faster).
